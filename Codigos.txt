@@ -1,0 +1,41 @@
+Configuracion menu left
+
+Frame Expandir
+self.ui.frame_sub0.setFixedHeight(60)
+
+Frame Ventas
+self.ui.frame_sub1.setFixedHeight(60)
+
+Frame Productos
+self.ui.frame_sub2.setFixedHeight(300)
+        
+self.ui.push_sub2_1_reponer.setFixedHeight(0)
+self.ui.push_sub2_2_promo.setFixedHeight(0)
+self.ui.push_sub2_3_cargar_prod.setFixedHeight(0)
+
+Frame Clientes
+self.ui.frame_sub3.setFixedHeight(60)
+self.ui.push_sub3_1_clientes.setVisible(False)
+self.ui.push_sub3_2_proveed.setVisible(False)
+
+Frame Registros
+self.ui.frame_sub4.setFixedHeight(60)
+self.ui.push_sub4_1_registros.setVisible(False)
+self.ui.push_sub4_2_estadisticas.setVisible(False)
+
+Frame Estado General
+self.ui.frame_sub5.setFixedHeight(60)
+
+Frame Generales
+self.ui.frame_sub6.setFixedHeight(60)
+self.ui.push_sub6_1_admcajas.setVisible(False)
+self.ui.push_sub6_2_cuentas.setVisible(False)
+self.ui.push_sub6_3_cargar_config.setVisible(False)
+
+
+self.fuente = self.font()
+
+posx = menu.pos().x()
+posy = menu.pos().y()
+
+

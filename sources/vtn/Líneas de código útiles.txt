@@ -1,0 +1,31 @@
+PYQT5
+python -m PyQt5.uic.pyuic mw_buscar_prod.ui -o vtn_buscar_prod.py
+python -m PyQt5.uic.pyuic mw_menu.ui -o vtn_menu.py
+python -m PyQt5.uic.pyuic mw_ventas.ui -o vtn_ventas.py
+python -m PyQt5.uic.pyuic mw_reponer.ui -o vtn_reponer.py
+python -m PyQt5.uic.pyuic mw_reponer_pago.ui -o vtn_reponer_pago.py
+python -m PyQt5.uic.pyuic mw_productos.ui -o vtn_productos.py
+python -m PyQt5.uic.pyuic qd_ingresa_precio_peso.ui -o vtn_peso_pcio.py
+
+7790150570340
+
+
+
+
+
+
+
+PYSIDE2
+pyside2-uic mw_menu.ui -o vtn_menu.py
+
+pyside2-uic mw_ventas.ui -o vtn_ventas.py
+
+pyside2-uic mw_reponer.ui -o vtn_reponer.py
+
+pyside2-uic mw_reponer_pago.ui -o vtn_reponer_pago.py
+
+pyside2-uic mw_productos.ui -o vtn_productos.py
+
+pyside2-uic mw_buscar_prod.ui -o vtn_buscar_prod.py
+
+
