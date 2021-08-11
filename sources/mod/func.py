@@ -24,7 +24,7 @@ FORMATO DE LAS PROMOS:
 FUNCIONES ADICIONALES
 Son funciones exclusivas de éste programa que se repiten en más de una ventana, clase o módulo, que para evitar que se copien varias veces, las cargamos en éste módulo.
 '''
-from App import *
+from App_Caja import *
 import sources.mod.mdbprom as mdbprom
 import sources.mod.mdbprod as mdbprod
 import sources.mod.vars as mi_vars

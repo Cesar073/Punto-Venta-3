@@ -1,7 +1,13 @@
+'''Contiene todo lo relativo a la ventana de Ventas.'''
+
+# (*1) = Para que un producto esté en condiciones de ser vendido, debe cumplir 3 requisitos:
+    # Ser un producto que se vende por unidad.
+    # Luego de conocer su estado (Desactivado - Incompleto - Completo), controlamos la configuración del programa para ver si coincide con la config del prod.
+    # Y luego de controlar su stock, verificar si el programa permite su venta cuando no tiene.
 
 from sources.mod.mdbegen import DB_Cajas_Totales_Cajas
 from typing import List
-from App import *
+from App_Caja import *
 #from sources.cls.Functions import *
 
 import sources.mod.mdbprod as mdb_p
@@ -107,6 +113,7 @@ class V_Ventas(QMainWindow):
 
     # Coloca los colores en la ventana según el formato que desee
     def Config_Mensaje(vtn_w, Lista_Datos, Mensajes = 0):
+        '''Configura la casilla de mensajes inferior con el texto y color de fondo, con 3 parámetros donde el último >>> "Mensajes = 0" indica que se restaura la ventana y los demás mensajes contienen su texto en ésta función.'''
         R = 0
         G = 0
         B = 0
@@ -730,15 +737,12 @@ class V_Ventas(QMainWindow):
             # Luego de hacer un llamado a las bases de datos, informamos cómo resultó la conexión con el mensaje superior en ventana
             V_Ventas.Mensaje_De_Conexion(vtn_w, conexion)
 
-            # Si el producto está desactivado no hacemos nada
-            if encontrado == 3:
-                QMessageBox.question(vtn, "Error", "Producto DESACTIVADO.", QMessageBox.Ok)
-                V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
-                return
-            
             # Si es una Promo, salimos de la función
             if V_Ventas.Detecta_Promo(vtn_w, Lista_Datos, encontrado, texto) == True:
                 return
+
+            # stock = variable que indica el stock del producto.
+            stock = Lista_Datos[23][8] + Lista_Datos[23][9] + Lista_Datos[23][10]
 
             # Cuando el producto no existe
             if encontrado == 0:
@@ -752,10 +756,17 @@ class V_Ventas(QMainWindow):
             elif encontrado == 1:
 
                 # Ahora controlamos en el modo en que se vende, por ejemplo, cuando se vende por Kg, mostramos una pantalla para que el usuario cargue el kg luego del código.
-                # Venta por unidad
+                # Venta por unidad normal
                 if Lista_Datos[23][7] == 1:
+                    pass
+                    # Controlamos si está en condiciones de ser vendido (*1)
+                    #CREAR LA FUNCIÓN QUE ANALIZA (*1) Y QUE LE DEVUELVA A ÉSTE IF, UN TRUE/FALSE SI SE PUEDE VENDER, Y EN CASO DE QUE NO SE PUEDA VENDER QUE DEVUELVA UN MENSAJE PARA MOSTRAR AL USUARIO
+
+
+
                     V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
                     return
+                # Venta con ingreso de precios manual
                 else:
                     V_Ventas.Config_Ingreso_Precio(vtn_w, Lista_Datos, Lista_Datos[23][7])
 
@@ -764,6 +775,13 @@ class V_Ventas(QMainWindow):
                 Lista_Datos[24] = Lista_Datos[23][3]
                 V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
 
+            # Si el producto está desactivado no hacemos nada
+            elif encontrado == 3:
+                QMessageBox.question(vtn, "Error", "Producto DESACTIVADO.", QMessageBox.Ok)
+                V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
+                return
+
+            # Cant_Proxima = 0
             Lista_Datos[24] = 0
             V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
 
@@ -1077,3 +1095,13 @@ class V_Ventas(QMainWindow):
         vtn_w.line_Codigo.setText("")
         vtn_w.line_Codigo.setFocus()
         Lista_Datos[27] = False
+
+    # Analiza si un código cargado para la venta se puede procesar
+    def Analiza_Codigo_Vta(Lista_Datos):
+        # Variable que dará aviso de que el producto se vende por unidad
+        unidad = False
+        if Lista_Datos[23][7] == 1:
+            unidad = True
+        
+
+        return unidad, 
