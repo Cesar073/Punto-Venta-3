@@ -62,7 +62,7 @@ import sources.mod.func as mi_func
 '''
 
 class V_Ventas(QMainWindow):    
-
+    
     '''#############################################################################################################################################
                                                             FUNCIONES DE VENTANA
     #############################################################################################################################################'''
@@ -650,6 +650,9 @@ class V_Ventas(QMainWindow):
     '''#############################################################################################################################################
                                                             FUNCIONES DE WIDGETS
     #############################################################################################################################################'''
+    
+
+
 
     # ScrollBar
     def Change_ScrollBar(vtn_w, Lista_Datos):
@@ -691,85 +694,6 @@ class V_Ventas(QMainWindow):
                 V_Ventas.Comandos_Especiales_1(vtn_w, Lista_Datos, texto1)
             elif largo == 2:
                 V_Ventas.Comandos_especiales_2(vtn, vtn_w, Lista_Datos, texto1)
-
-    # Se ejecuta con Enter dentro del line de Buscar Códigos
-        # Pasos:
-        # Controlamos que haya algo escrito en el line
-        # Ejecutamos los comandos especiales
-        # Controlamos si es o no una promo
-        # Cargamos los datos del producto
-        # Ofrecemos crear un producto nuevo
-    def Return_line_Cod(vtn, vtn_w, Lista_Datos):
-
-        # Estamos teniendo problemas con productos que cierran el programa, por esto es que tanto ésta función como las que están dentro, van a contener éste try
-        try:
-            # Si el Enter que llama a ésta función fue el que se ejecuta después de haber cargado el signo pesos con el lector, entonces ignoramos
-            if Lista_Datos[1] == 1:
-                Lista_Datos[1] = 0
-                return
-
-            # Si no hay nada escrito, llevamos el foco al line para ingresar el monto con el que paga el cliente
-            if vtn_w.line_Codigo.text() == "":
-                # La acción de apretar Enter con el Line vacío cuando se está esperando una promo, equivale a: +80+
-                if Lista_Datos[29] == True:
-                    V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
-                    Lista_Datos[29] = False                          
-                    V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
-                vtn_w.line_Monto.setFocus()
-                return
-
-            # Capturamos el texto escrito en el line
-            texto = vtn_w.line_Codigo.text()
-
-            # Si son comandos especiales, salimos de la función
-            if V_Ventas.Comandos_Especiales_Enter(vtn, vtn_w, Lista_Datos, texto) == True:
-                return
-
-            # La función nos devuelve en la primer variable (0= no existe; 1= Existe y es código normal; 2= Es codXbulto; 3= Producto Desactivado), de ser > 0, entonces en la lista están todos sus datos
-            encontrado, Lista_Datos[23], conexion = mdb_p.Dev_Info_Producto(texto)
-            # Luego de hacer un llamado a las bases de datos, informamos cómo resultó la conexión con el mensaje superior en ventana
-            V_Ventas.Mensaje_De_Conexion(vtn_w, conexion)
-
-            # Si el producto está desactivado no hacemos nada
-            if encontrado == 3:
-                QMessageBox.question(vtn, "Error", "Producto DESACTIVADO.", QMessageBox.Ok)
-                V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
-                return
-            
-            # Si es una Promo, salimos de la función
-            if V_Ventas.Detecta_Promo(vtn_w, Lista_Datos, encontrado, texto) == True:
-                return
-
-            # Cuando el producto no existe
-            if encontrado == 0:
-                Rta = QMessageBox.question(vtn, "Desconocido", "El código no existe, ¿desea crear un PRODUCTO NUEVO?", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Cancel)
-                if Rta == QMessageBox.Ok:
-                    Lista_Datos[28] = texto
-                else:
-                    V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
-
-            # El producto existe y tiene valores normales
-            elif encontrado == 1:
-
-                # Ahora controlamos en el modo en que se vende, por ejemplo, cuando se vende por Kg, mostramos una pantalla para que el usuario cargue el kg luego del código.
-                # Venta por unidad
-                if Lista_Datos[23][7] == 1:
-                    V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
-                    return
-                else:
-                    V_Ventas.Config_Ingreso_Precio(vtn_w, Lista_Datos, Lista_Datos[23][7])
-
-            # El producto exise pero el código es un cod x bulto
-            elif encontrado == 2:
-                Lista_Datos[24] = Lista_Datos[23][3]
-                V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
-
-            Lista_Datos[24] = 0
-            V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
-
-        except:
-            QMessageBox.question(vtn, "ERROR", "Anote el PRODUCTO para tener registro del error.", QMessageBox.Ok)
-            V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
 
     # Evento Change del line que se encuentra en las opciones del GroupBox de precios. Permite números y (, y .) pero los traduce a una única coma.
     def Change_line_GB_Precio(vtn_w):
@@ -1039,6 +963,87 @@ class V_Ventas(QMainWindow):
     def Cancela_Promo(vtn, vtn_w, Lista_Datos):
         V_Ventas.Elimina_Item(vtn, vtn_w, Lista_Datos)
         V_Ventas.Config_Ingreso_Promo(vtn_w, Lista_Datos, False)
+
+    
+    # Se ejecuta con Enter dentro del line de Buscar Códigos
+        # Pasos:
+        # Controlamos que haya algo escrito en el line
+        # Ejecutamos los comandos especiales
+        # Controlamos si es o no una promo
+        # Cargamos los datos del producto
+        # Ofrecemos crear un producto nuevo
+    def Return_line_Cod2(vtn, vtn_w, Lista_Datos):
+
+        # Estamos teniendo problemas con productos que cierran el programa, por esto es que tanto ésta función como las que están dentro, van a contener éste try
+        try:
+            # Si el Enter que llama a ésta función fue el que se ejecuta después de haber cargado el signo pesos con el lector, entonces ignoramos
+            if Lista_Datos[1] == 1:
+                Lista_Datos[1] = 0
+                return
+
+            # Si no hay nada escrito, llevamos el foco al line para ingresar el monto con el que paga el cliente
+            if vtn_w.line_Codigo.text() == "":
+                # La acción de apretar Enter con el Line vacío cuando se está esperando una promo, equivale a: +80+
+                if Lista_Datos[29] == True:
+                    V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
+                    Lista_Datos[29] = False                          
+                    V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
+                vtn_w.line_Monto.setFocus()
+                return
+
+            # Capturamos el texto escrito en el line
+            texto = vtn_w.line_Codigo.text()
+
+            # Si son comandos especiales, salimos de la función
+            if V_Ventas.Comandos_Especiales_Enter(vtn, vtn_w, Lista_Datos, texto) == True:
+                return
+
+            # La función nos devuelve en la primer variable (0= no existe; 1= Existe y es código normal; 2= Es codXbulto; 3= Producto Desactivado), de ser > 0, entonces en la lista están todos sus datos
+            encontrado, Lista_Datos[23], conexion = mdb_p.Dev_Info_Producto(texto)
+            # Luego de hacer un llamado a las bases de datos, informamos cómo resultó la conexión con el mensaje superior en ventana
+            V_Ventas.Mensaje_De_Conexion(vtn_w, conexion)
+
+            # Si el producto está desactivado no hacemos nada
+            if encontrado == 3:
+                QMessageBox.question(vtn, "Error", "Producto DESACTIVADO.", QMessageBox.Ok)
+                V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
+                return
+            
+            # Si es una Promo, salimos de la función
+            if V_Ventas.Detecta_Promo(vtn_w, Lista_Datos, encontrado, texto) == True:
+                return
+
+            # Cuando el producto no existe
+            if encontrado == 0:
+                Rta = QMessageBox.question(vtn, "Desconocido", "El código no existe, ¿desea crear un PRODUCTO NUEVO?", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Cancel)
+                if Rta == QMessageBox.Ok:
+                    Lista_Datos[28] = texto
+                else:
+                    V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
+
+            # El producto existe y tiene valores normales
+            elif encontrado == 1:
+
+                # Ahora controlamos en el modo en que se vende, por ejemplo, cuando se vende por Kg, mostramos una pantalla para que el usuario cargue el kg luego del código.
+                # Venta por unidad
+                if Lista_Datos[23][7] == 1:
+                    V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
+                    return
+                else:
+                    V_Ventas.Config_Ingreso_Precio(vtn_w, Lista_Datos, Lista_Datos[23][7])
+
+            # El producto exise pero el código es un cod x bulto
+            elif encontrado == 2:
+                Lista_Datos[24] = Lista_Datos[23][3]
+                V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
+
+            Lista_Datos[24] = 0
+            V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
+
+        except:
+            QMessageBox.question(vtn, "ERROR", "Anote el PRODUCTO para tener registro del error.", QMessageBox.Ok)
+            V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
+
 
     '''#############################################################################################################################################
                                                             FUNCIONES GENERALES
