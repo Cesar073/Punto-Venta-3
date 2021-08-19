@@ -30,7 +30,7 @@ import sources.mod.vars as mi_vs
 import sources.mod.func as func
 import sources.mod.mdbprod as mdb_p
 from sources.mod.renglones import *
-master
+
 class MainWindow(QMainWindow):
 
     def __init__(self):
