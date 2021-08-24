@@ -1,3 +1,9 @@
+'''Contiene todo lo relativo a la ventana de Ventas.'''
+
+# (*1) = Para que un producto esté en condiciones de ser vendido, debe cumplir 3 requisitos:
+    # Ser un producto que se vende por unidad.
+    # Luego de conocer su estado (Desactivado - Incompleto - Completo), controlamos la configuración del programa para ver si coincide con la config del prod.
+    # Y luego de controlar su stock, verificar si el programa permite su venta cuando no tiene.
 
 from sources.mod.mdbegen import DB_Cajas_Totales_Cajas
 from typing import List
@@ -119,7 +125,9 @@ class V_Ventas(QMainWindow):
         vtn_w.line_Codigo.setFocus()
 
     def Config_Mensaje(vtn_w, Lista_Datos, Mensajes = 0):
-        '''Configura los colores del mensaje inferior. Si el 3er parámetro Mensajes se deja por defecto, vuelve el estado a la normalidad.'''
+
+        '''Configura la casilla de mensajes inferior con el texto y color de fondo, con 3 parámetros donde el último >>> "Mensajes = 0" indica que se restaura la ventana y los demás mensajes contienen su texto en ésta función.'''
+
         R = 0
         G = 0
         B = 0
@@ -754,11 +762,13 @@ class V_Ventas(QMainWindow):
             if V_Ventas.Detecta_Promo(vtn, vtn_w, Lista_Datos, encontrado, texto) == True:
                 return
 
+            # stock = variable que indica el stock del producto.
+            stock = Lista_Datos[23][8] + Lista_Datos[23][9] + Lista_Datos[23][10]
+
             # Cuando el producto no existe
             if encontrado == 0:
-                Rta = QMessageBox.question(vtn, "Desconocido", "El código no existe, ¿desea crear un PRODUCTO NUEVO?", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Cancel)
-                if Rta == QMessageBox.Ok:
-                    Lista_Datos[28] = texto
+                Rta = QMessageBox.question(vtn, "Desconocido", "El código no existe.", QMessageBox.Ok)
+                V_Ventas.Limpia_Foco_Cod(vtn_w,Lista_Datos)
             else:
                 if encontrado == 2:
                     Lista_Datos[24] = Lista_Datos[23][3]
@@ -776,6 +786,7 @@ class V_Ventas(QMainWindow):
                     else:
                         V_Ventas.Config_Ingreso_Precio(vtn_w, Lista_Datos, Lista_Datos[23][7])
 
+            # Cant_Proxima = 0
             Lista_Datos[24] = 0
             V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
             if vtn_w.stackedWidget.currentWidget() != vtn_w.page_msjs:

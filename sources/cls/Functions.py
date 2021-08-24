@@ -9,7 +9,7 @@
 ## ==> GUI FILE
 import PyQt5
 from PyQt5.QtCore import QAbstractAnimation
-from App import *
+from App_Caja import *
 
 '''
 FUNCIONES DE CONTENIDO Y ANIMACIONES DE LOS MENÚES

@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "..\\IMAGENES ESSEN"
 		}
 	],
 	"settings": {}
