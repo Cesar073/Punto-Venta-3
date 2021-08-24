@@ -349,7 +349,7 @@ def Actualiza_Path():
                 count += 1
 
             # Path Base de Datos Pos 1 en la DB. LOCAL. Es el recurso para cuando no hay conexión, o para las configuraciones locales.
-            if reg[1] == "POS_2" and reg[2] != "":
+            if reg[1] == "POS_1" and reg[2] != "":
                 mi_vars.BASE_DATOS_SEC = reg[2] + "prod.db"
                 mi_vars.BASE_GENERAL_SEC = reg[2] + "egen.db"
                 mi_vars.BASE_PROMOS_SEC = reg[2] + "prom.db"
@@ -365,8 +365,6 @@ def Actualiza_Configuraciones(vtn, Lista_Datos):
     
     Pos 1: de 0 a 5 - Ver pos 32 de la lista de Ventas.'''
 
-    Lista = []
-
     Tabla = mdbprod.Dev_Tabla(mi_vars.BASE_CONFIG_SEC, "Generales", "ID")
     Rta1 = 0
     act_1 = False
@@ -374,25 +372,7 @@ def Actualiza_Configuraciones(vtn, Lista_Datos):
     act_2 = False
     for reg in Tabla:
         if reg[3] == "Vta_Prod_Desact":
-            if reg[1] == 1:
-                if reg[4] == 1:
-                    Lista.append(True)
-                else:
-                    Lista.append(False)
-        if reg[3] == "renglones_listas":
-            if reg[4] == 0:
-                for i in range(100):
-                    vtn.ui.listWidget_3.addItem("Renglón: {}".format(str(i + 1)))
-                bucle = False
-                while bucle == False:
-                    Rta1, Ok = QInputDialog.getInt(vtn, "Configuración:", "Indique la cantidad de renglones QUE VE COMPLETOS en pantalla.", 0, 1, 100)
-                    if Rta1 > 0 and Rta1 < 100 and Ok == True:
-                        bucle = True
-                        act_1 = True
-                Lista_Datos[0] = Rta1 - 1
-                vtn.ui.listWidget_3.clear()
-            else:
-                Lista_Datos[0] = reg[4]
+            Lista_Datos[0] = reg[4]
         if reg[3] == "Barra":
             if reg[1] == 1:
                 if reg[5] == "":

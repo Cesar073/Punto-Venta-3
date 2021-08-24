@@ -17,7 +17,7 @@ SE UTILIZA PARA CULMINAR LA CARGA DE UNA VENTA INDICANDO A DÓNDE VA A IR LA PLA
 #from PyQt5 import QtWidgets, QtCore
 #from PyQt5.QtWidgets import QMainWindow, QMessageBox, QInputDialog
 #from vtn.vtn.vtn_carga_fondos import Ui_Vta_Fondos
-from App import *
+from App_Caja import *
 
 import sources.mod.form as form
 import sources.mod.mdbprom as mdbprom

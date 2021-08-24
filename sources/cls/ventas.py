@@ -1,7 +1,7 @@
 
 from sources.mod.mdbegen import DB_Cajas_Totales_Cajas
 from typing import List
-from App import *
+from App_Caja import *
 #from sources.cls.Functions import *
 
 import sources.mod.mdbprod as mdb_p
@@ -9,8 +9,21 @@ import sources.mod.mdbprom as mdbprom
 import sources.mod.form as form
 import sources.mod.vars as mi_vars
 import sources.mod.func as mi_func
+from sources.mod.renglones import *
 
 '''
+    FORMA DE TRABAJO
+    
+        PRODUCTOS QUE PUEDEN VENDERSE (*1)
+            Si vemos los datos que representa la variable de la pos [32] podemos ver que en el programa se puede seleccionar con qué tipo deproductos se pueden trabajar, por 
+            ejemplo, se pueden usar productos que estén DESACTIVADOS. La idea ppal es que yo pueda ir incorporando desde casa todos los productos que pueda pero indicar que 
+            están desactivados y probar el programa a pesar de que quizás no tenga productos que estén a la venta en el local realmente. Luego antes de entregarlo se cambia la 
+            configuración y se evitan los productos desactivados. De esta manera incorporo a la lista productos que quizás no esté trabajando actualmente el vendedor pero si 
+            lo incorpora a futuro puede resultarle útil. Para ello una función se encargará de analizar los datos y confirmar si se pueden o no vender dichos productos.
+
+    Si un usuario carga un código que no existe, no está funcionando la posibilidad de crearlo. buscar línea: Lista_Datos[28] = texto
+
+
     CAMBIOS REALIZADOS PARA INFORMAR QUE SE HICIERON EN ÉSTA VERSIÓN:
 
 
@@ -61,19 +74,21 @@ import sources.mod.func as mi_func
         + Incorporación de botón pre-seleccionado cuando aparece un mensaje en pantalla.
 '''
 
-class V_Ventas(QMainWindow):    
+class V_Ventas(QMainWindow):
     
+    # Lista que contiene 2 datos por cada producto que se carga, primero la guía en formato texto y luego el objeto del renglón.
+    lista_renglones = []
     '''#############################################################################################################################################
                                                             FUNCIONES DE VENTANA
     #############################################################################################################################################'''
 
-    # Lo que queremos que se ejecute al mostrar la página
     def Mostrar(vtn_w):
+        '''Muestra la Page correspondiente y por ahora sólo hace foco en el line_cod'''
         vtn_w.stackedWidget.setCurrentWidget(vtn_w.page_Ventas)
         vtn_w.line_Codigo.setFocus()
 
-    # Sirve para limpiar toda la ventana, o para limpiar los datos luego de haberse cargado un producto a la lista
     def Limpia_Ventana(vtn_w, Lista_Datos):
+        '''Limpia todos los datos de una venta, incluyendo variables y widgets.'''
         for i in reversed(range(vtn_w.verticalLayout_5.count())): 
             widgetToRemove = vtn_w.verticalLayout_5.itemAt(i).widget()
             # remove it from the layout list
@@ -86,27 +101,25 @@ class V_Ventas(QMainWindow):
         vtn_w.line_Monto.clear()
         vtn_w.label_Vuelto.setText("0,00")
         vtn_w.label_Total.setText("0,00")
-        '''
-        vtn_w.listWidget_2.clear()
-        vtn_w.listWidget_3.clear()
-        vtn_w.listWidget_4.clear()
-        vtn_w.listWidget_5.clear()
-        vtn_w.listWidget_6.clear()
-        '''
+
         # Limpiamos las variables
-        Lista_Datos[24] = 0
+        V_Ventas.lista_renglones = []
+        Lista_Datos[0] = 0
+        Lista_Datos[1] = 0
         Lista_Datos[21] = []
         Lista_Datos[22] = []
         Lista_Datos[23] = []
+        Lista_Datos[24] = 0
         Lista_Datos[28] = ""
-        Lista_Datos[31] = 0
         Lista_Datos[29] = False
+        Lista_Datos[30] = []
+        Lista_Datos[31] = 0
+        Lista_Datos[36] = 0
         V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
-
         vtn_w.line_Codigo.setFocus()
 
-    # Coloca los colores en la ventana según el formato que desee
     def Config_Mensaje(vtn_w, Lista_Datos, Mensajes = 0):
+        '''Configura los colores del mensaje inferior. Si el 3er parámetro Mensajes se deja por defecto, vuelve el estado a la normalidad.'''
         R = 0
         G = 0
         B = 0
@@ -152,9 +165,9 @@ class V_Ventas(QMainWindow):
         # Le asignamos el color seleccionado al fondo del label de mensajes
         vtn_w.label_Msj.setStyleSheet("background-color: rgb({}, {}, {});".format(R, G, B))
 
-    # Configura y muestra el groupbox que simula ser ventana de ingreso de datos (Precio, Litros, Kg, etc). Tener en cuenta que con sólo llamar a la función indicando lo que
-        # se va a hacer, ella se encarga de configurar todo lo relativo a las cargas de datos.
     def Config_Ingreso_Precio(vtn_w, Lista_Datos, Tipo = 0):
+        '''Configura y muestra el groupbox que simula ser ventana de ingreso de datos (Precio, Litros, Kg, etc). Tener en cuenta que con sólo llamar a la función indicando lo 
+        que se va a hacer, ella se encarga de configurar todo lo relativo a las cargas de datos.'''
         # Parametros:
             # Tipo= 0: Es para restaurar la ventana, y limpia variables tmb.
             # Tipo= 1: Unidad - 2: Peso - 3: Litros - 4: cm3 - 5: Precio
@@ -186,8 +199,8 @@ class V_Ventas(QMainWindow):
             vtn_w.line_Ingresos.setFocus()
         else:
             Lista_Datos[31] = 0
-            V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
             vtn_w.stackedWidget.setCurrentWidget(vtn_w.page_Ventas)
+            V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
 
     # Configura y muestra el groupbox que simula ser ventana de ingreso Productos para promociones
     def Config_Ingreso_Promo(vtn_w, Lista_Datos, Coloca = True):
@@ -231,8 +244,8 @@ class V_Ventas(QMainWindow):
             Lista_Datos[29] = False
             V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
 
-    # Configura el mensaje superior referido a la conexión
     def Mensaje_De_Conexion(vtn_w, msj):
+        '''Configura el mensaje superior referido a la conexión. msj = int (0, 1, 2 o 3)'''
         # ROJO
         r = 255
         g = 0
@@ -240,7 +253,7 @@ class V_Ventas(QMainWindow):
         if msj == 0:
             vtn_w.label.setText("DESCONECTADO")
         elif msj == 1:
-            vtn_w.label.setText("Reconectando")
+            vtn_w.label.setText("Trabajando en: LOCAL")
             r = 255
             g = 170
             b = 127
@@ -249,39 +262,42 @@ class V_Ventas(QMainWindow):
             r = 35
             g = 200
             b = 35
+        elif msj == 3:
+            vtn_w.label.setText("Esperando actividad...")
+            r = 150
+            g = 150
+            b = 150
         vtn_w.frame.setStyleSheet("background-color: rgb({},{},{});".format(r,g,b))
 
     '''#############################################################################################################################################
                                                         COMANDOS ESPECIALES DE VENTANA
     #############################################################################################################################################'''
 
-    # LINE_COD 1 caracter
     def Comandos_Especiales_1(vtn_w, Lista_Datos, texto):
+        '''Se llama siempre que hay un sólo caracter en el line_cod.'''
         if texto == "-":
             V_Ventas.Config_Mensaje(vtn_w, Lista_Datos, Mensajes = 3)
 
-    # LINE_COD 2 caracteres
     def Comandos_especiales_2(vtn, vtn_w, Lista_Datos, texto):
-
+        '''Se llama siempre que hay dos caracteres en el line_cod.'''
         # Elimina el último ítem
         if texto == "--":
             V_Ventas.Elimina_Item(vtn, vtn_w, Lista_Datos)
-            V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
-            V_Ventas.Reinicio_Vtn_Parcial(vtn_w, Lista_Datos)
 
-    # Analiza si el texto que se ingresó en el line_cod es un comando especial, y de ser así lo ejecuta
-    # INFO SOBRE LOS CÓDIGOS:
-        # Hay casos donde 2 códigos distintos hacen la misma tarea, por ejemplo responder con "SI" a preguntas como si quieren aceptar la promo se puede contestar con "CODSI" 
-        # o con "+51+". El motivo es porque para usar el lector de códigos utilizo combinaciones de letras para evitar que en algún momento un código inventado por mí se cruce
-        # con un código de productos ya que esos son exclusivamente números. Por otro lado necesito crear un código a la par que haga lo mismo pero sin el lector, con el 
-        # teclado numérico, porque si por ejemplo se arruina la hoja de códigos o por algún motivo el lector no puede leerlo, tienen que tener una alternativa reproducible con 
-        # un poco de facilidad en el teclado numérico (+51+).
-        # La razón por la cuál no genero un código para el lector igual al otro (+51+), es porque los códigos de barra que genero con CODE39, no se leen de igual forma en 
-        # Windows y Linux, siendo que el único símbolo que entienden por igual ambos sistemas operativos es el signo $, el cuál no contiene ningún teclado numérico. Es decir, 
-        # que si genero un código de barras que signifique "+51+", serviría sólo en Windows pero no en Linux. La única combinación que me sirve en ambos es $51$ pero es un 
-        # código que no se puede reproducir en el teclado, y por ello es que tengo que hacer sí o sí 2 códigos para un mismo fin. Y ya que hago 2 códigos para lo mismo, hago 
-        # algo simple para el teclado y algo más complejo pero práctico para le lector.
     def Comandos_Especiales_Enter(vtn, vtn_w, Lista_Datos, texto):
+        '''Analiza si el texto que se ingresó en el line_cod es un comando especial, y de ser así lo ejecuta. Tener en cuenta que los comando especiales de 1 y 2 caracteres 
+        son trabajados en Comandos_Especiales_1 y Comandos_especiales_2 respectivamente.'''
+        # INFO SOBRE LOS CÓDIGOS:
+            # Hay casos donde 2 códigos distintos hacen la misma tarea, por ejemplo responder con "SI" a preguntas como si quieren aceptar la promo se puede contestar con 
+            # "CODSI" o con "+51+". El motivo es porque para usar el lector de códigos utilizo combinaciones de letras para evitar que en algún momento un código inventado por 
+            # mí se cruce con un código de productos ya que esos son exclusivamente números. Por otro lado necesito crear un código a la par que haga lo mismo pero sin el 
+            # lector, con el teclado numérico, porque si por ejemplo se arruina la hoja de códigos o por algún motivo el lector no puede leerlo, tienen que tener una 
+            # alternativa reproducible con un poco de facilidad en el teclado numérico (+51+).
+            # La razón por la cuál no genero un código para el lector igual al otro (+51+), es porque los códigos de barra que genero con CODE39, no se leen de igual forma en 
+            # Windows y Linux, siendo que el único símbolo que entienden por igual ambos sistemas operativos es el signo $, el cuál no contiene ningún teclado numérico. Es 
+            # decir, que si genero un código de barras que signifique "+51+", serviría sólo en Windows pero no en Linux. La única combinación que me sirve en ambos es $51$ 
+            # pero es un código que no se puede reproducir en el teclado, y por ello es que tengo que hacer sí o sí 2 códigos para un mismo fin. Y ya que hago 2 códigos para 
+            # lo mismo, hago algo simple para el teclado y algo más complejo pero práctico para le lector.
         try:
             # Primero controlamos si es que es un comando, de lo contrario devolvemos el control del flujo
             aux = texto[0]
@@ -298,8 +314,7 @@ class V_Ventas(QMainWindow):
                         # Ya sabemos que se ingresó el código para modificar un precio, ahora vamos a hacer los controles pertinentes
                         # Controlamos que haya algún producto cargado
                         if len(Lista_Datos[21]) > 0:
-                            # Teniendo en cuenta que los códigos internos sobretodo de promos tienen menos de 5 caracteres, usamos dicho valor para distinguir un producto de
-                                # un código interno
+                            # Controlamos que haya un código normal de producto pero al mismo tiempo que no contenga uno de una promo.
                             if Lista_Datos[21][-1][0] > 0 and Lista_Datos[21][-1][7] == "":
                                 V_Ventas.Config_Ingreso_Precio(vtn_w, Lista_Datos, 6)
                         else:
@@ -328,9 +343,11 @@ class V_Ventas(QMainWindow):
                         V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
                         return True
 
-                    # Elimina el último producto. En realidad se controla con el primer caracter si es que es un comando, y luego con 2 "--" recién se elimina
                     elif aux == "-" or texto == "CODBO":
-
+                        ''' Llama a eliminar productos. Recordar que exiten 2 formas.
+                        1) Borrar el útlimo cargado, útil para cuando sólo queríamos saber el precio de algo. (-- / CODBO / presionando "Eliminar" sin selección)
+                        2) Borrar uno en particular. (ejemplo: -3 borra la posición 3 en pantalla / seleccionando y luego presionar "Eliminar")
+                        '''
                         # Cuando colocan el signo "-" y presionan Enter
                         if len(texto) == 1 or texto == "CODBO":
                             V_Ventas.Elimina_Item(vtn, vtn_w, Lista_Datos)
@@ -378,7 +395,7 @@ class V_Ventas(QMainWindow):
                                     # Promo simple
                                     if Tipo_Prom == 1:
                                         existe, lista_Auxiliar = mdbprom.Busca_Cod_Promo("Promos", "Codigo", ID_Promo)
-                                        V_Ventas.Acepta_Promo_Simple(vtn_w, Lista_Datos, lista_Auxiliar)
+                                        V_Ventas.Acepta_Promo_Simple(vtn, vtn_w, Lista_Datos, lista_Auxiliar)
                                     elif Tipo_Prom == 2:
                                         existe, lista_Auxiliar = mdbprom.Busca_Cod_Promo("Promos", "Codigo", ID_Promo)
                                         V_Ventas.Acepta_Promo_Compleja(vtn_w, Lista_Datos, lista_Auxiliar, Lista_Datos[23][1])
@@ -386,7 +403,7 @@ class V_Ventas(QMainWindow):
                                 # Cuando el usuario indica NO
                                 elif texto == "+80+" or texto == "CODNO":
                                     Lista_Datos[29] = False
-                                    V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
+                                    V_Ventas.Carga_Prod(vtn, vtn_w, Lista_Datos, Lista_Datos[23])
 
                         V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
                         return True
@@ -394,9 +411,10 @@ class V_Ventas(QMainWindow):
             QMessageBox.question(vtn, "ERROR", "Anote el PRODUCTO para tener registro del error.", QMessageBox.Ok)
         return False
 
-    # Al precionar la / que está tanto en el teclado como por código, lo que vamos a hacer es limpiar el line_cod, dirigirle el foco y poner a cero cant_proxima
-        # Esto va a ser que la /, sea un recurso casi en todo momento para limpiar esos requechos de datos que no se pueden cancelar, etc...
     def Event_press_barra(vtn_w, Lista_Datos):
+        '''Al precionar la / que está tanto en el teclado como por código, lo que vamos a hacer es limpiar el line_cod, dirigirle el foco y poner a cero cant_proxima.
+        Esto va a ser que la /, sea un recurso casi en todo momento para limpiar esos requechos de datos que no se pueden cancelar y poder dirigir al line_cod el foco del
+        programa en cualquier momento.'''
         Lista_Datos[27] = True
         vtn_w.line_Codigo.setText("")
         Lista_Datos[27] = False
@@ -409,9 +427,8 @@ class V_Ventas(QMainWindow):
                                                         FUNCIONES DE CARGA DE PRODUCTOS
     #############################################################################################################################################'''
     
-    # Le debe llegar una lista con todos los datos de un producto, controla con la Lista_Datos[21] si ya había dicho producto, si está actualiza su cantidad, y sino lo 
-        # agrega a la lista y a los listwidget
-    def Carga_Prod(vtn_w, Lista_Datos, Lista):
+    def Carga_Prod(vtn, vtn_w, Lista_Datos, Lista):
+        '''El primer paso para crear un nuevo renglón o actualizar datos existentes como cuando sumamos unidades a un producto ya cargado.'''
         pos = -1
 
         # El código va a buscar en las listas a ver si no existe con anterioridad para únicamente sumar las unidades y subtotales, pero vamos a evitar las promos para que 
@@ -460,25 +477,27 @@ class V_Ventas(QMainWindow):
             Subtotal_s = form.Formato_Decimal(Subtotal_f, 2)
             Lista_Datos[21][pos][4] = Subtotal_f
             Lista_Datos[22][pos2][4] = Subtotal_s
-
-            # Limpiamos y refrescamos las listas
-            V_Ventas.Refresca_Listas(vtn_w, Lista_Datos)
-            Lista_Datos[26] = True
-            largo = len(Lista_Datos[22])
-            maximo = largo - Lista_Datos[0] + 1
-            vtn_w.verticalScrollBar.setValue(maximo)
-            Lista_Datos[26] = False
+            # Actualizamos ambos datos pero en pantalla
+            for i in V_Ventas.lista_renglones:
+                if i[0] == Lista_Datos[22][pos2][0]:
+                    i[1].Lista_Labels[3].setText(Cantidad_s)
+                    i[1].Lista_Labels[4].setText(Subtotal_s)
+                    break
 
             # Llamamos a la función que suma los subtotales
             V_Ventas.Suma_Venta(vtn_w, Lista_Datos)
             V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
         else:
             # CUANDO SE VA A CARGAR UN PRODUCTO NUEVO
+            # Actualizamos el numero de guía
+            Lista_Datos[36] += 1
+
             Pcio_unit_f = Lista[18]
             Cantidad_i = 1
             Subtotal_f = Lista[18]
 
-            Numero_s = str(len(Lista_Datos[22]) + 1)
+            # Numero_s en realidad es la guía, que puede o no coincidir con los números en pantalla, lo importante es que siempre coincida con la lista de [21]
+            Numero_s = str(Lista_Datos[36])
             Concepto_s = Lista[4] + " " + Lista[5] + " " + Lista[6]
             Pcio_unit_s = form.Formato_Unidades(Pcio_unit_f, 3)
             Cantidad_s = "1"
@@ -499,17 +518,18 @@ class V_Ventas(QMainWindow):
             Lista_Datos[21].append([Lista[0], Concepto_s, Pcio_unit_f, Cantidad_i, Subtotal_f, Numero_s, Lista[20], ""])
             Lista_Datos[22].append([Numero_s, Concepto_s, Pcio_unit_s, Cantidad_s, Subtotal_s])
 
-            # Cargamos en los listW el producto
-            V_Ventas.Actualiza_Ultimo_ListW(vtn_w, Lista_Datos)
+            # Agregamos un renglón
+            V_Ventas.Crea_renglon(vtn, vtn_w, Lista_Datos)
 
             # Llamamos a la función que suma los subtotales
             V_Ventas.Suma_Venta(vtn_w, Lista_Datos)
             V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
     
-    # A ésta función se le entregan los datos de la promo y carga la promo completa tanto en la lista en pantalla como en las listas para las ventas
-    def Carga_Prod_Promo1(vtn_w, Lista_Datos, Cod_Promo, Nomb_Promo, Costo_Total, Lista_Cod, Lista_Cant, Lista_Precio):
-        # Datos para los ListWidgets
-        Numero_s = str(len(Lista_Datos[22]) + 1)
+    def Carga_Prod_Promo1(vtn, vtn_w, Lista_Datos, Cod_Promo, Nomb_Promo, Costo_Total, Lista_Cod, Lista_Cant, Lista_Precio):
+        '''A ésta función se le entregan los datos de la promo y carga la promo completa tanto en la lista en pantalla como en las listas para las ventas.'''
+        # Número de Guía
+        Lista_Datos[36] += 1
+        Numero_s = str(Lista_Datos[36])
 
         # Guardamos cada uno de los productos por separado en la lista de Venta Real
         Tope = len(Lista_Cod)
@@ -522,10 +542,11 @@ class V_Ventas(QMainWindow):
             
             Concepto_s = "PROMO: " + Lista_Datos_bd[4] + " " + Lista_Datos_bd[5] + " " + Lista_Datos_bd[6]
             if i == Tope - 1:
-                aux = Costo_Total - sumado
+                aux = form.Redondear_float(Costo_Total - sumado,2)
             else:
                 aux = form.Redondear_float(Lista_Precio[i] * Lista_Cant[i],2)
-            Lista_Datos[21].append([Lista_Datos[0], Concepto_s, Lista_Precio[i], Lista_Cant[i], aux, Numero_s, Lista_Datos[20], Cod_Promo])
+                sumado += aux
+            Lista_Datos[21].append([Lista_Datos_bd[0], Concepto_s, Lista_Precio[i], Lista_Cant[i], aux, Numero_s, Lista_Datos[20], Cod_Promo])
 
         # Guardamos los valores de la lista en ventana
         suma = 0
@@ -534,21 +555,52 @@ class V_Ventas(QMainWindow):
         Lista_Datos[22].append([Numero_s, Nomb_Promo, form.Formato_Decimal(Costo_Total,2), str(suma),form.Formato_Decimal(Costo_Total,2)])
         
         # Cargamos en los listW el producto
-        V_Ventas.Actualiza_Ultimo_ListW(vtn_w, Lista_Datos)
+        V_Ventas.Crea_renglon(vtn, vtn_w, Lista_Datos)
 
-        # Siempre el último paso de las promos, son los que desactivan el sistema de promo
+        # Desactiva el sistema de promo
         Lista_Datos[29] = False
 
         # Llamamos a la función que suma los subtotales
         V_Ventas.Suma_Venta(vtn_w, Lista_Datos)
         V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
     
+    def Crea_renglon(vtn, vtn_w, Lista_Datos):
+        '''Función que crea un renglón en la lista de productos, sólo necesita ser llamada porque toma todos los valores de las variables existentes. Tener en cuenta que para cuando es llamada la función, la Lista_Datos tanto en la pos [21] como en [22] ya deben estar actualizadas. Saber también que se encarga de asignar a cada label del renglón un evento clic, haciendo parecer que es un botón entero.'''
+
+        # Redimencionamos el frame que lo contiene y ajustamos el scroll si es necesario
+        V_Ventas.Ajusta_Frame_Scroll(vtn_w, Lista_Datos)
+
+        # Obtenemos el nombre que se va a aplicar tanto al renglón como al layout, aunque por el momento creo que no tiene ninguna utilidad. Nos manejamos con el número de guía ya que sin importar los cambios que hayan en pantalla, no van a repetirse en una misma venta los números de guía.
+        nombre = str(Lista_Datos[36])
+        # El color es para que cada renglón tenga distinto fondo de manera intercalada, se indica con 0 o 1
+        color = 1
+        largo = len(Lista_Datos[22])
+        if largo % 2 == 0:
+            color = 0
+        # El ancho debe conocerlo la clase del renglón, así calcula el ancho de la columna "Concepto" en función al espacio que dejan libre las otras columnas.
+        ancho = vtn_w.frame_labels.width()
+        # Creamos el renglón
+        renglon = Lista_venta([Lista_Datos[22][-1][0], Lista_Datos[22][-1][1], Lista_Datos[22][-1][2], Lista_Datos[22][-1][3], Lista_Datos[22][-1][4]], nombre, ancho, color)
+        # Lo colocamos dentro del layout
+        vtn_w.verticalLayout_5.addWidget(renglon)
+        # Lo ubicamos y redimencionamos 
+        renglon.setGeometry(0,Lista_Datos[34][1] * (largo - 1), ancho, Lista_Datos[34][1])
+        # Lo colocamos dentro de una lista para su fácil uso
+        V_Ventas.lista_renglones.append([nombre, renglon])
+
+        # INTENTANDO CONFIGURAR EL SIGNAL
+        V_Ventas.lista_renglones[-1][1].Lista_Labels[0].clicked.connect(lambda: V_Ventas.Color_seleccion(nombre, Lista_Datos))
+        V_Ventas.lista_renglones[-1][1].Lista_Labels[1].clicked.connect(lambda: V_Ventas.Color_seleccion(nombre, Lista_Datos))
+        V_Ventas.lista_renglones[-1][1].Lista_Labels[2].clicked.connect(lambda: V_Ventas.Color_seleccion(nombre, Lista_Datos))
+        V_Ventas.lista_renglones[-1][1].Lista_Labels[3].clicked.connect(lambda: V_Ventas.Color_seleccion(nombre, Lista_Datos))
+        V_Ventas.lista_renglones[-1][1].Lista_Labels[4].clicked.connect(lambda: V_Ventas.Color_seleccion(nombre, Lista_Datos))
+    
     '''#############################################################################################################################################
                                                         FUNCIONES DEDICADAS A LAS PROMOS
     #############################################################################################################################################'''
 
     # Controla si el código cargado o el producto y cantidades cargadas pertenecen o no a una promo
-    def Detecta_Promo(vtn_w, Lista_Datos, encontrado, Codigo):
+    def Detecta_Promo(vtn, vtn_w, Lista_Datos, encontrado, Codigo):
 
         # ATENCIÓN: Cuando se carga el código de una promo se sobreentiende que es lo que quieren y entonces directamente vamos a cargar la promo.
             # Pero cuando detectamos que un producto forma parte de una promo, el cliente puede o no querer la promo, por ello es que vamos a consultar antes de cargarla.
@@ -561,7 +613,7 @@ class V_Ventas(QMainWindow):
                 
                 # Cuando la promo es simple, un producto con diversas cantidades
                 if lista[4] == 1:
-                    V_Ventas.Acepta_Promo_Simple(vtn_w, Lista_Datos, lista)
+                    V_Ventas.Acepta_Promo_Simple(vtn, vtn_w, Lista_Datos, lista)
 
                 # Cuando la promo es compleja
                 elif lista[4] == 2:
@@ -570,22 +622,26 @@ class V_Ventas(QMainWindow):
                 return True
         
         elif encontrado == 1:
-            # Es cuando un Producto forma parte de una promo indicado en su columna en la DB
-            if Lista_Datos[23][27] != "":
-                largo = len(Lista_Datos[23][27])
-                cod = Lista_Datos[23][27][0:(largo - 1)]
-                existe, lista = mdbprom.Busca_Cod_Promo("Promos", "Codigo", cod)
-                vtn_w.label_Msj.setText("DESEA CARGAR LA PROMO: {}?".format(lista[2]))
-                vtn_w.label_Msj.setStyleSheet('background-color: rgb({},{},{});'.format(Lista_Datos[15], Lista_Datos[16], Lista_Datos[17]))
-                Lista_Datos[29] = True
-                V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
-                return True
-        
+            # El producto es normal así que vamos a ver si se puede vender
+            estado, msj = V_Ventas.Analiza_Producto(Lista_Datos)
+            if estado == True:
+                # Es cuando un Producto forma parte de una promo indicado en su columna en la DB
+                if Lista_Datos[23][27] != "":
+                    largo = len(Lista_Datos[23][27])
+                    cod = Lista_Datos[23][27][0:(largo - 1)]
+                    existe, lista = mdbprom.Busca_Cod_Promo("Promos", "Codigo", cod)
+                    vtn_w.label_Msj.setText("DESEA CARGAR LA PROMO: {}?".format(lista[2]))
+                    vtn_w.label_Msj.setStyleSheet('background-color: rgb({},{},{});'.format(Lista_Datos[15], Lista_Datos[16], Lista_Datos[17]))
+                    Lista_Datos[29] = True
+                    V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
+                    return True
+            else:
+                QMessageBox.question(vtn, "Error", msj, QMessageBox.Ok)
         return False
 
     # Se ejecuta cuando sabemos que el cliente quiere comprar la promo, porque por ej pudo haber comprado un producto pero no quiere llevarse los 3 que componen la promo,
         # en este caso preparamos los datos necesarios para cargar dicha promo, y luego llamamos a la función que carga la promo.
-    def Acepta_Promo_Simple(vtn_w, Lista_Datos, Lista_Promo):
+    def Acepta_Promo_Simple(vtn, vtn_w, Lista_Datos, Lista_Promo):
         Prod_de_Promo = Lista_Promo[5]
         nomb = "PROMO: " + Lista_Promo[2]
         costo = Lista_Promo[15]
@@ -595,7 +651,7 @@ class V_Ventas(QMainWindow):
         lista_Codi, lista_Cant, lista_Pcio = mi_func.Dev_Info_Promo_1(Prod_de_Promo)
 
         # Cargamos la promo en las ventas(lista[15]: Monto total de la promo. lista_promo[1]: Cod de la promo)
-        V_Ventas.Carga_Prod_Promo1(vtn_w, Lista_Datos, Lista_Promo[1], nomb, costo, lista_Codi, lista_Cant, lista_Pcio)
+        V_Ventas.Carga_Prod_Promo1(vtn, vtn_w, Lista_Datos, Lista_Promo[1], nomb, costo, lista_Codi, lista_Cant, lista_Pcio)
 
     # Su función es cargar los códigos de los productos que componen la promo, una vez que sabemos que el cliente va a adquirir la promo, y actualizar los datos de los listw.
     # El parametro Codigo, viene con el codigo del primer producto que se haya pasado por el scaner.
@@ -651,14 +707,91 @@ class V_Ventas(QMainWindow):
                                                             FUNCIONES DE WIDGETS
     #############################################################################################################################################'''
     
+    # Se ejecuta con Enter dentro del line de Buscar Códigos
+        # Pasos:
+        # Controlamos que haya algo escrito en el line
+        # Ejecutamos los comandos especiales
+        # Controlamos si es o no una promo
+        # Cargamos los datos del producto
+        # Ofrecemos crear un producto nuevo
+    def Return_line_Cod(vtn, vtn_w, Lista_Datos):
 
+        # Estamos teniendo problemas con productos que cierran el programa, por esto es que tanto ésta función como las que están dentro, van a contener éste try
+        try:
+            # Si el Enter que llama a ésta función fue el que se ejecuta después de haber cargado el signo pesos con el lector, entonces ignoramos
+            if Lista_Datos[1] == 1:
+                Lista_Datos[1] = 0
+                V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
+                return
 
+            # Si no hay nada escrito, llevamos el foco al line para ingresar el monto con el que paga el cliente
+            if vtn_w.line_Codigo.text() == "":
+                # La acción de apretar Enter con el Line vacío cuando se está esperando una promo, equivale a: +80+
+                if Lista_Datos[29] == True:
+                    V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
+                    Lista_Datos[29] = False                          
+                    V_Ventas.Carga_Prod(vtn, vtn_w, Lista_Datos, Lista_Datos[23])
+                    V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
+                else:
+                    vtn_w.line_Monto.setFocus()
+                return
 
-    # ScrollBar
+            # Capturamos el texto escrito en el line
+            texto = vtn_w.line_Codigo.text()
+
+            # Si son comandos especiales, salimos de la función
+            if V_Ventas.Comandos_Especiales_Enter(vtn, vtn_w, Lista_Datos, texto) == True:
+                return
+
+            # La función nos devuelve en la primer variable (0= no existe; 1= Existe y es código normal; 2= Es codXbulto; 3= Producto Desactivado), de ser > 0, entonces en la 
+                # lista están todos sus datos. En conexión nos llega información desde cuál base de datos pudo obtener la información, así podemos informar si estamos 
+                # conectado por wifi a la db ppal o si estamos trabajando de manera local.
+            encontrado, Lista_Datos[23], conexion = mdb_p.Dev_Info_Producto(texto)
+            # Luego de hacer un llamado a las bases de datos, informamos cómo resultó la conexión con el mensaje superior en ventana
+            V_Ventas.Mensaje_De_Conexion(vtn_w, conexion)
+
+            # Si es una Promo, salimos de la función
+            if V_Ventas.Detecta_Promo(vtn, vtn_w, Lista_Datos, encontrado, texto) == True:
+                return
+
+            # Cuando el producto no existe
+            if encontrado == 0:
+                Rta = QMessageBox.question(vtn, "Desconocido", "El código no existe, ¿desea crear un PRODUCTO NUEVO?", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Cancel)
+                if Rta == QMessageBox.Ok:
+                    Lista_Datos[28] = texto
+            else:
+                if encontrado == 2:
+                    Lista_Datos[24] = Lista_Datos[23][3]
+
+                estado, msj = V_Ventas.Analiza_Producto(Lista_Datos)
+
+                if estado == False:
+                    QMessageBox.question(vtn, "ERROR CON EL PRODUCTO", msj, QMessageBox.Ok)
+                else:
+                    # Venta por unidad
+                    if Lista_Datos[23][7] == 1:
+                        V_Ventas.Carga_Prod(vtn, vtn_w, Lista_Datos, Lista_Datos[23])
+                        return
+                    # Venta por cantidad o peso
+                    else:
+                        V_Ventas.Config_Ingreso_Precio(vtn_w, Lista_Datos, Lista_Datos[23][7])
+
+            Lista_Datos[24] = 0
+            V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
+            if vtn_w.stackedWidget.currentWidget() != vtn_w.page_msjs:
+                V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
+        except:
+            QMessageBox.question(vtn, "ERROR", "Anote el PRODUCTO para tener registro del error.", QMessageBox.Ok)
+            V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
+
     def Change_ScrollBar(vtn_w, Lista_Datos):
-        largo = len(Lista_Datos[22])
-        if largo > Lista_Datos[0]:
+        '''Si el scroll está habilitado, entonces movemos el frame_lista con los valores del mismo para mostrar lo que no entra en el frame_content_lista.'''
+        # No es necesario controlar si el frame puede moverse o el rango, ya que el evento sólo se va a ejecutar si es posible y dentro de los valores correctos.
+        if Lista_Datos[26] == False:
             valor = vtn_w.verticalScrollBar.value()
+            ancho = vtn_w.frame_lista.width()
+            alto = vtn_w.frame_lista.height()
+            vtn_w.frame_lista.setGeometry(0, 0 - valor, ancho, alto)
 
     # Hace que al hacer clic en una posición de una lista, se seleccionen las demás simulando que todas forman parte de un mismo renglón. Así tmb si se llama a ésta función
         # sin valor del parámetro Origen, se termina deseleccionando las listas
@@ -707,7 +840,7 @@ class V_Ventas(QMainWindow):
             if len(texto) > 0:
                 # Capturamos el texto escrito en el line
                 Lista_Datos[24] = form.Str_Float(texto)
-                V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
+                V_Ventas.Carga_Prod(vtn, vtn_w, Lista_Datos, Lista_Datos[23])
                 V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
                 V_Ventas.Config_Ingreso_Precio(vtn_w, Lista_Datos)
                 V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
@@ -808,15 +941,10 @@ class V_Ventas(QMainWindow):
                                                             FUNCIONES PARA WIDGETS
     #############################################################################################################################################'''
 
-    # Elimina un item de las listas. Si hay algún producto seleccionado lo elimina y quita toda selección, de lo contrario elimina al último ítem. Si viene por parámetro la 
-        # ubicación de un ítem lo borra.
-        # Nota: el valor de ubi será 1 para la primer posición de la lista y no 0, y tmb recordar que si la lista supera lo mostrado en pantalla, las posiciones no son las
-            # mismas en pantalla con la Lista_Datos[22], ya que en pantalla se muestra lo que se puede ver y no todos los productos totales.
     def Elimina_Item(vtn, vtn_w, Lista_Datos, ubi = 0):
+        '''Elimina algún renglón de la lista siguiendo las siguientes prioridades: Primero controla el parámetro ubi, luego si existe alguna selección en Lista_Datos[0], de lo contrario elije el último renglón para borrar. Nota: el primer renglón será 1 y no 0.'''
         largo = len(Lista_Datos[22])
         if largo > 0:
-            # Dejamos por defecto que no se debe quitar selección ya que sólo sucede en 1 de cada 3 tipos de casos en que se llama a ésta función
-            quita_sel = False
             # True: Cuando viene con una ubicación indicada. False: Sin ubicación
             if ubi > 0:
                 if ubi <= largo:
@@ -825,16 +953,18 @@ class V_Ventas(QMainWindow):
                     QMessageBox.question(vtn, "Error", "Error al indicar ubicación del PRODUCTO que desea ELIMINAR.", QMessageBox.Ok)
                     return
             else:
-                try:
-                    valor = "a"
-                    valor = vtn_w.listWidget_2.selectedItems()[0].text()
-                    pos = int(valor)
-                    quita_sel = True
-                except:
+                if Lista_Datos[0] > 0:
+                    pos = Lista_Datos[0]
+                else:
                     pos = largo
             
-            # Eliminamos
+            # Eliminamos el renglón
+            V_Ventas.lista_renglones[pos - 1][1].deleteLater()
+            # Debemos eliminar su referencia para que no hayan más datos
+            V_Ventas.lista_renglones.pop(pos - 1)
+            # Eliminamos de la lista de productos en pantalla
             Lista_Datos[22].pop(pos-1)
+            # Eliminamos de la lista completa que hay de productos
             texto = str(pos)
             bucle = True
             cont = 0
@@ -848,209 +978,87 @@ class V_Ventas(QMainWindow):
                     else:
                         cont += 1
 
-            # Si se eliminó un producto que estaba seleccionado en pantalla, se quita dicha selección previo a la eliminación, para que no quede algo seleccionado luego
-            if quita_sel == True:
-                V_Ventas.Seleccion_Listas(vtn_w)
-            
-            # Se limpian y se refrescan todas las listas
-            V_Ventas.Refresca_Listas(vtn_w, Lista_Datos)
-            Lista_Datos[26] = True
-            maximo = largo - Lista_Datos[0] + 1
-            if maximo > 1:
-                vtn_w.verticalScrollBar.setValue(maximo)
-            else:
-                vtn_w.verticalScrollBar.setMinimum(0)
-                vtn_w.verticalScrollBar.setValue(0)
-                vtn_w.verticalScrollBar.setMaximum(0)
-            Lista_Datos[26] = False
+            # Quitamos la selección que haya y restauramos los colores como si no hubiera selección
+            if pos != largo or Lista_Datos[0] > 0:
+                V_Ventas.Colores_de_renglones()
+                Lista_Datos[0] = 0
 
-    # Cuando se agrega algún producto nuevo ésta función lo agrega los listwidget en pantalla según los datos que están en la Lista_Datos[22]
-    # No modifica valores importantes, sino variables del scrollbar
-    def Actualiza_Ultimo_ListW(vtn_w, Lista_Datos):
-
-        largo = len(Lista_Datos[22])
-
-        if largo == 0:
-            return
-
-        if largo > Lista_Datos[0]:
-            Lista_Datos[26] = True
-            valor = vtn_w.verticalScrollBar.value()
-            if valor == 0:
-                vtn_w.verticalScrollBar.setMinimum(1)
-            maximo = largo - Lista_Datos[0] + 1
-            vtn_w.verticalScrollBar.setMaximum(maximo)
-            # Al asignar éste valor a la barra, se llama automáticamente a la función que actualiza las listas
-            Lista_Datos[26] = False
-            vtn_w.verticalScrollBar.setValue(maximo)
-
+            V_Ventas.Ajusta_Frame_Scroll(vtn_w, Lista_Datos)
+            V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
+            V_Ventas.Suma_Venta(vtn_w, Lista_Datos)
+            V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
         else:
-            vtn_w.listWidget_2.addItem(Lista_Datos[22][-1][0])
-            vtn_w.listWidget_3.addItem(Lista_Datos[22][-1][1])
-            vtn_w.listWidget_4.addItem(Lista_Datos[22][-1][2])
-            vtn_w.listWidget_5.addItem(Lista_Datos[22][-1][3])
-            vtn_w.listWidget_6.addItem(Lista_Datos[22][-1][4])
-
-    # Limpia y refresca los datos de todas las listas en pantalla y refresca el índice que mostramos en el listWidget1, ya que si por ej se ha borrado un item estos cambian.
-    def Refresca_Listas(vtn_w, Lista_Datos, scrol = 0):
-
-        # Esta variable es True sólo cuando se asigna por primera vez el valor del scrollbar, pero llama a ésta función y no debe ejecutarse xq luego se vuelve a llamar a ésta
-            # misma función pero con un nuevo valor
-        if Lista_Datos[26] == False:
-
-            # Limpiamos todas las listas
-            vtn_w.listWidget_2.clear()
-            vtn_w.listWidget_3.clear()
-            vtn_w.listWidget_4.clear()
-            vtn_w.listWidget_5.clear()
-            vtn_w.listWidget_6.clear()
-
-            largo = len(Lista_Datos[22])
-            # ReEnumeramos los valores de índice que se cargan en la primer lista, tener en cuenta que debe permanecer en concordancia con la Guía en la lista de venta real.
-            for i in range(largo):
-                Nro_Nuevo = str(i + 1)
-                Nro_Viejo = Lista_Datos[22][i][0]
-                for n in Lista_Datos[21]:
-                    if n[5] == Nro_Viejo:
-                        n[5] = Nro_Nuevo
-                Lista_Datos[22][i][0] = Nro_Nuevo
-
-            # Si los ítems entran en pantalla, los cargamos de manera normal, de lo contrario, cargamos los últimos ítems
-            if largo > Lista_Datos[0]:
-
-                # Ahora miramos si el valor máximo de la scrollbar es correcto, porque si se han eliminado productos, el largo debe ajustarse
-                largoLW = vtn_w.verticalScrollBar.maximum()
-                if (largoLW - 1) > (largo - Lista_Datos[0]):
-                    if vtn_w.verticalScrollBar.value() == largoLW:
-                        Lista_Datos[26] = True
-                        maximo = largo - Lista_Datos[0] + 1
-                        vtn_w.verticalScrollBar.setValue(maximo)
-                        vtn_w.verticalScrollBar.setMaximum(maximo)
-                        scrol = maximo
-                        Lista_Datos[26] = False                        
-
-                if scrol == 0:
-                    for i in range(Lista_Datos[0]):
-                        vtn_w.listWidget_2.addItem(Lista_Datos[22][-(Lista_Datos[0] - i)][0])
-                        vtn_w.listWidget_3.addItem(Lista_Datos[22][-(Lista_Datos[0] - i)][1])
-                        vtn_w.listWidget_4.addItem(Lista_Datos[22][-(Lista_Datos[0] - i)][2])
-                        vtn_w.listWidget_5.addItem(Lista_Datos[22][-(Lista_Datos[0] - i)][3])
-                        vtn_w.listWidget_6.addItem(Lista_Datos[22][-(Lista_Datos[0] - i)][4])
-                else:
-                    for i in range((scrol - 1), (scrol + Lista_Datos[0] - 1)):
-                        vtn_w.listWidget_2.addItem(Lista_Datos[22][i][0])
-                        vtn_w.listWidget_3.addItem(Lista_Datos[22][i][1])
-                        vtn_w.listWidget_4.addItem(Lista_Datos[22][i][2])
-                        vtn_w.listWidget_5.addItem(Lista_Datos[22][i][3])
-                        vtn_w.listWidget_6.addItem(Lista_Datos[22][i][4])
-            else:
-                # Si está habilitada la barra hay que deshabilitarla
-                if vtn_w.verticalScrollBar.value() > 0:
-                    Lista_Datos[26] = True
-                    vtn_w.verticalScrollBar.setMinimum(0)
-                    vtn_w.verticalScrollBar.setValue(0)
-                    vtn_w.verticalScrollBar.setMaximum(0)
-                    Lista_Datos[26] = False
-                for sub in Lista_Datos[22]:
-                    vtn_w.listWidget_2.addItem(sub[0])
-                    vtn_w.listWidget_3.addItem(sub[1])
-                    vtn_w.listWidget_4.addItem(sub[2])
-                    vtn_w.listWidget_5.addItem(sub[3])
-                    vtn_w.listWidget_6.addItem(sub[4])
-            V_Ventas.Reinicio_Vtn_Parcial(vtn_w, Lista_Datos)
+            QMessageBox.question(vtn, "Aviso", "No hay productos cargados para ELIMINAR.", QMessageBox.Ok)
 
     # Función que reestablece lo que se haya cargado en el caso de que se haya cancelado una promo del tipo 2 en medio de la carga.
     def Cancela_Promo(vtn, vtn_w, Lista_Datos):
         V_Ventas.Elimina_Item(vtn, vtn_w, Lista_Datos)
         V_Ventas.Config_Ingreso_Promo(vtn_w, Lista_Datos, False)
 
-    
-    # Se ejecuta con Enter dentro del line de Buscar Códigos
-        # Pasos:
-        # Controlamos que haya algo escrito en el line
-        # Ejecutamos los comandos especiales
-        # Controlamos si es o no una promo
-        # Cargamos los datos del producto
-        # Ofrecemos crear un producto nuevo
-    def Return_line_Cod2(vtn, vtn_w, Lista_Datos):
-
-        # Estamos teniendo problemas con productos que cierran el programa, por esto es que tanto ésta función como las que están dentro, van a contener éste try
-        try:
-            # Si el Enter que llama a ésta función fue el que se ejecuta después de haber cargado el signo pesos con el lector, entonces ignoramos
-            if Lista_Datos[1] == 1:
-                Lista_Datos[1] = 0
-                return
-
-            # Si no hay nada escrito, llevamos el foco al line para ingresar el monto con el que paga el cliente
-            if vtn_w.line_Codigo.text() == "":
-                # La acción de apretar Enter con el Line vacío cuando se está esperando una promo, equivale a: +80+
-                if Lista_Datos[29] == True:
-                    V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
-                    Lista_Datos[29] = False                          
-                    V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
-                vtn_w.line_Monto.setFocus()
-                return
-
-            # Capturamos el texto escrito en el line
-            texto = vtn_w.line_Codigo.text()
-
-            # Si son comandos especiales, salimos de la función
-            if V_Ventas.Comandos_Especiales_Enter(vtn, vtn_w, Lista_Datos, texto) == True:
-                return
-
-            # La función nos devuelve en la primer variable (0= no existe; 1= Existe y es código normal; 2= Es codXbulto; 3= Producto Desactivado), de ser > 0, entonces en la lista están todos sus datos
-            encontrado, Lista_Datos[23], conexion = mdb_p.Dev_Info_Producto(texto)
-            # Luego de hacer un llamado a las bases de datos, informamos cómo resultó la conexión con el mensaje superior en ventana
-            V_Ventas.Mensaje_De_Conexion(vtn_w, conexion)
-
-            # Si el producto está desactivado no hacemos nada
-            if encontrado == 3:
-                QMessageBox.question(vtn, "Error", "Producto DESACTIVADO.", QMessageBox.Ok)
-                V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
-                return
-            
-            # Si es una Promo, salimos de la función
-            if V_Ventas.Detecta_Promo(vtn_w, Lista_Datos, encontrado, texto) == True:
-                return
-
-            # Cuando el producto no existe
-            if encontrado == 0:
-                Rta = QMessageBox.question(vtn, "Desconocido", "El código no existe, ¿desea crear un PRODUCTO NUEVO?", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Cancel)
-                if Rta == QMessageBox.Ok:
-                    Lista_Datos[28] = texto
-                else:
-                    V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
-
-            # El producto existe y tiene valores normales
-            elif encontrado == 1:
-
-                # Ahora controlamos en el modo en que se vende, por ejemplo, cuando se vende por Kg, mostramos una pantalla para que el usuario cargue el kg luego del código.
-                # Venta por unidad
-                if Lista_Datos[23][7] == 1:
-                    V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
+    def Color_seleccion(guia, Lista_Datos):
+        '''Le llega como parámetro la guía que nos indica qué renglón se ha presionado. A ésta función la llaman los 5 labels que componen al renglón.
+        Esta función se encarga de marcar como seleccionado el renglón entero pintándolo y además cargando su valor en la Lista_Datos[0]'''
+        # color es el parametro que va a indicar que paleta de colores utilizar (ver modulo renglones.py)
+        color = 2
+        # Si hay renglones, continuamos
+        if len(V_Ventas.lista_renglones) > 0:
+            # Si había alguna selección, quitamos su color
+            if Lista_Datos[0] > 0:
+                V_Ventas.Colores_de_renglones()
+            # Recorremos los renglones que tenemos en la listsa_renglones, cuando encontramos el que buscamos, guardamos su valor en la variable y lo pintamos de color
+            for i in V_Ventas.lista_renglones:
+                if i[1].objectName() == "frame_renglon_{}".format(guia):
+                    Lista_Datos[0] = int(guia)
+                    i[1].Lista_Labels[0].asigna_fondo(color)
+                    i[1].Lista_Labels[1].asigna_fondo(color)
+                    i[1].Lista_Labels[2].asigna_fondo(color)
+                    i[1].Lista_Labels[3].asigna_fondo(color)
+                    i[1].Lista_Labels[4].asigna_fondo(color)
                     return
-                else:
-                    V_Ventas.Config_Ingreso_Precio(vtn_w, Lista_Datos, Lista_Datos[23][7])
 
-            # El producto exise pero el código es un cod x bulto
-            elif encontrado == 2:
-                Lista_Datos[24] = Lista_Datos[23][3]
-                V_Ventas.Carga_Prod(vtn_w, Lista_Datos, Lista_Datos[23])
+    def Colores_de_renglones():
+        '''Recorre todos los renglones y le asigna de nuevo un color de fondo y renumera el valor de Nro de la lista.'''
+        largo = len(V_Ventas.lista_renglones)
+        cont = 0
+        for pos in range(largo):
+            cont += 1
+            color = 1
+            if (pos + 1) % 2 == 0:
+                color = 0
+            V_Ventas.lista_renglones[pos][1].Lista_Labels[0].setText(str(cont))
+            V_Ventas.lista_renglones[pos][1].Lista_Labels[0].asigna_fondo(color)
+            V_Ventas.lista_renglones[pos][1].Lista_Labels[1].asigna_fondo(color)
+            V_Ventas.lista_renglones[pos][1].Lista_Labels[2].asigna_fondo(color)
+            V_Ventas.lista_renglones[pos][1].Lista_Labels[3].asigna_fondo(color)
+            V_Ventas.lista_renglones[pos][1].Lista_Labels[4].asigna_fondo(color)
 
-            Lista_Datos[24] = 0
-            V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
-
-        except:
-            QMessageBox.question(vtn, "ERROR", "Anote el PRODUCTO para tener registro del error.", QMessageBox.Ok)
-            V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
-
+    def Ajusta_Frame_Scroll(vtn_w, Lista_Datos):
+        '''Rajusta los valores del scrollbar en función a los datos actuales de la aplicación, es decir, que ya deben haberse realizado los cambios necesarios. Adicionalmente coloca la lista mostrando el último producto de la misma al final.'''
+        # Nota: el valor mínimo del scroll es siempre 0.
+        # Desactivamos el evento change
+        Lista_Datos[26] = True
+        cant_renglones = len(Lista_Datos[22])
+        alto_renglones = (cant_renglones * Lista_Datos[34][1]) + cant_renglones
+        alto_panel = vtn_w.frame_panel.height() - vtn_w.frame_labels.height()
+        ancho = vtn_w.frame_labels.width()
+        vtn_w.frame_content_lista.setFixedSize(QtCore.QSize(ancho, alto_panel))
+        if alto_panel < alto_renglones:
+            max = alto_renglones - alto_panel
+            vtn_w.verticalScrollBar.setMaximum(max)
+            vtn_w.verticalScrollBar.setValue(max)
+            vtn_w.frame_lista.setGeometry(0, 0 - max, ancho, alto_renglones)
+        else:
+            vtn_w.verticalScrollBar.setMaximum(0)
+            vtn_w.verticalScrollBar.setValue(0)
+            vtn_w.frame_lista.setGeometry(0, 0, ancho, alto_renglones)
+        Lista_Datos[26] = False
 
     '''#############################################################################################################################################
                                                             FUNCIONES GENERALES
     #############################################################################################################################################'''
 
-    # Suma los subtotales y coloca el total en el label. Al mismo tiempo devuelve el valor total en formato float si es que lo requieren
     def Suma_Venta(vtn_w, Lista_Datos):
+        '''Suma los subtotales y coloca el total en el label. Al mismo tiempo devuelve el valor total en formato float si es que lo requieren. '''
         aux = V_Ventas.Aux_Suma_Venta(vtn_w, Lista_Datos)
         if len(Lista_Datos[21]) > 0:
             vtn_w.label_Total.setText(form.Formato_Decimal(aux, 2))
@@ -1058,27 +1066,65 @@ class V_Ventas(QMainWindow):
             vtn_w.label_Total.setText("0,00")
         return aux
 
-    # Calcula el total y devuelve un float
     def Aux_Suma_Venta(vtn_w, Lista_Datos):
+        '''Calcula la suma de la venta devolviendo un resultado del tipo float. '''
         aux = 0.0
         if len(Lista_Datos[21]) > 0:
             for pos in Lista_Datos[21]:
                 aux += pos[4]
         return aux
 
-    # Cuando se desea resetear toda la ventana pero sin modificar los datos de la lista
-        # Refresco: Es por si le agregamos o no el refresco de la lista de datos
-    def Reinicio_Vtn_Parcial(vtn_w, Lista_Datos, Refresco=False):
-        if Refresco == True:
-            V_Ventas.Refresca_Listas(vtn_w, Lista_Datos)
-        else:
-            V_Ventas.Suma_Venta(vtn_w, Lista_Datos)
-        vtn_w.line_Codigo.setText("")
-        vtn_w.line_Codigo.setFocus()
-
-    # Trabaja sobre el line_codigo, limpiándolo y luego llevando el foco sobre él. Coloqué éstas 4 líneas en una función porque se ejecuta muchísimas veces en el programa.
     def Limpia_Foco_Cod(vtn_w, Lista_Datos):
+        ''''Trabaja sobre el line_codigo, limpiándolo y luego llevando el foco sobre él. '''
         Lista_Datos[27] = True
         vtn_w.line_Codigo.setText("")
         vtn_w.line_Codigo.setFocus()
         Lista_Datos[27] = False
+        print("el alto es: {}".format(str(vtn_w.frame_lista.height())))
+
+    def Analiza_Producto(Lista_Datos):
+        ''' (*1) Función que controla si el producto que está por cargarse (pos[23]) se puede vender en función a la configuración actual del sistema (pos[32]). Devuelve un 
+        V/F indicando si se puede vender, y en caso de que no se pueda regresa el mensaje indicando la cuasa.'''
+
+        estado = Lista_Datos[23][19]
+        stock = Lista_Datos[23][8] + Lista_Datos[23][8] + Lista_Datos[23][8]
+        config = Lista_Datos[32]
+        cant = 1
+        if Lista_Datos[24] > 0:
+            cant = Lista_Datos[24]
+        
+        # True: Permite sin stock. False: Sólo con stock disponible.
+        if config < 3:
+            if config == 0:
+                return True, ""
+            elif config == 1:
+                if estado == 0:
+                    return False, "El producto está DESACTIVADO. El programa se encuentra configurado de manera tal que no permite éste tipo de ventas."
+                else:
+                    return True, ""
+            elif config == 2:
+                if estado == 0:
+                    return False, "El producto está DESACTIVADO. El programa se encuentra configurado de manera tal que no permite éste tipo de ventas."
+                elif estado == 1:
+                    return False, "El producto está INCOMPLETO. El programa se encuentra configurado de manera tal que no permite éste tipo de ventas."
+                elif estado == 2:
+                    return True, ""
+        else:
+            if stock >= cant:
+                if config == 3:
+                    return True, ""
+                elif config == 4:
+                    if estado == 0:
+                        return False, "El producto está DESACTIVADO. El programa se encuentra configurado de manera tal que no permite éste tipo de ventas."
+                    else:
+                        return True, ""
+                elif config == 5:
+                    if estado == 2:
+                        return True, ""
+                    else:
+                        if estado == 1:
+                            return False, "El producto está INCOMPLETO. El programa se encuentra configurado de manera tal que no permite éste tipo de ventas."
+                        elif estado == 0:
+                            return False, "El producto está DESACTIVADO. El programa se encuentra configurado de manera tal que no permite éste tipo de ventas."
+            else:
+                return False, "El producto NO TIENE STOCK suficiente. El programa se encuentra configurado de manera tal que no permite éste tipo de ventas."

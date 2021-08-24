@@ -17,7 +17,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QFileDialog, QInputDialog, QFrame
 #from vtn.vtn.vtn_productos import Ui_Productos
 from PyQt5.QtGui import QIcon, QPixmap, QFont
-from PyQt5.QtCore import QDir, Qt
+from PyQt5.QtCore import QDir, QSize, Qt
 
 from sources.vtn.mw_ppal import Ui_MainWindow
 
@@ -54,6 +54,10 @@ class MainWindow(QMainWindow):
         self.Configura_Configuraciones()
 
         self.showMaximized()
+        alto = self.ui.frame_panel.height() - self.ui.frame_labels.height()
+        self.ui.frame_content_lista.setFixedHeight(alto)
+
+        
 
         func.Actualiza_Configuraciones(self, self.Lista_Page_Ventas)
 
@@ -65,12 +69,13 @@ class MainWindow(QMainWindow):
         # Configuramos las imagenes de la ventana
         self.ui.push_config_cierra_ses.setIcon(QtGui.QIcon("./sources/img/icon/ses.jpg"))
         
+        V_Ventas.Mensaje_De_Conexion(self.ui, 3)
 
         self.Lista_Page_Ventas = []
             
         # VARIABLES QUE NO SE DEBEN MODIFICAR EN EJECUCIÓN
-        # Es la cantidad de productos que vamos a dejar ver en las listas
-        # Pos 0: CANT_WIDG
+        # Esta variable del tipo int, indica el producto que se encuentra seleccionado de la lista. Si está seleccionado el primer producto de la lista, ésta variable vale 1 y 
+        # no 0.
         self.Lista_Page_Ventas.append(0)
 
         # Pos 1: PRESION_ANTERIOR = 0
@@ -124,11 +129,6 @@ class MainWindow(QMainWindow):
         self.Lista_Page_Ventas.append(0)
         self.Lista_Page_Ventas.append(0)
 
-        self.ui.verticalScrollBar.setMinimum(0)
-        self.ui.verticalScrollBar.setMaximum(0)
-        self.ui.verticalScrollBar.valueChanged.connect(lambda: self.Refresca_Listas(scrol = self.ui.verticalScrollBar.value()))
-        
-
         # VARIABLES QUE SE MODIFICAN AL LIMPIAR PANTALLA O SIMILARES
         # Lista que contiene en otras listas los datos del producto o promo para realizar los cálculos y los cobros
         # Pos 21: LISTA_VENTA_REAL = []
@@ -144,7 +144,7 @@ class MainWindow(QMainWindow):
         self.Lista_Page_Ventas.append(LISTA_VENTA_REAL)
         # Lista que contiene en otras listas los datos que mostramos en los listwidgets en pantalla
         # Pos 22: LISTA_VENTA_MOSTRADA = []
-            # 0: Numero
+            # 0: Numero de GUÍA
             # 1: Concepto
             # 2: Pcio Unit
             # 3: Cantidad
@@ -155,7 +155,6 @@ class MainWindow(QMainWindow):
         # Pos 23: PROD_TEMP = []
         PROD_TEMP = []
         self.Lista_Page_Ventas.append(PROD_TEMP)
-
 
         # Es la cantidad de unidades que se van a cargar del próximo producto. Si su unidad de medida es kg o lts, la forma de cargar es distinta
         # Pos 24: Cantidad_Prox = 0
@@ -193,8 +192,7 @@ class MainWindow(QMainWindow):
             # 4: cm3
             # 5: Precio
             # 11: Codigo
-        DATOS_PROMOS_2 = []
-        self.Lista_Page_Ventas.append(DATOS_PROMOS_2)
+        self.Lista_Page_Ventas.append([])
 
         # Pos 31: BANDERA_PRECIO = 0
         self.Lista_Page_Ventas.append(0)
@@ -215,15 +213,9 @@ class MainWindow(QMainWindow):
 
         ''' Pos 34: Lista con los datos necesarios para crear un nuevo renglón. (*1)
             0: T/F bandera que no se utiliza aquí.
-            1: color del fondo del renglón entero.
-            2: alto del renglón, por el momento es 41 píxeles.
-            3: número para la primer columna.
-            4: concepto.
-            5: cantidad.
-            6: precio unitario.
-            7: subtotal.
+            1: alto del renglón, por el momento es 41 píxeles.
         '''
-        self.Lista_Page_Ventas.append([False, 0, 41, "1", "","","",""])
+        self.Lista_Page_Ventas.append([False, 41])
 
         # Pos 35: Avisa si hay que actualizar el valor de algún renglón
             # 0: T-F
@@ -235,11 +227,15 @@ class MainWindow(QMainWindow):
             # 6: Nuevo valor para Subtotal
         self.Lista_Page_Ventas.append([False, 0, "", "", "", "", ""])
 
-        # Pos 36: Indica si hay que eliminar un renglón, y su pos.
-        self.Lista_Page_Ventas.append([False, 0])
+        # Pos 36: Valor de referencia para cada producto de venta. Por cada producto que se carga, se le asigna un valor de referencia, que no es más que un número entero que se va incrementando desde 1. El valor es la guía que comparten las lista [21] y [22]. Si no se borran ítems, también coincidiría con el número visto en pantalla, pero, no siempre va a ser así, ya que si un elemento de pantalla se borra, su guía permanecerá intacta y los próximos productos se mantienen en aumento, perdiendo la concordancia con los números mostrados en la lista por pantalla.
+        self.Lista_Page_Ventas.append(0)
 
 
         # CONFIGURACIONES DE WIDGETS
+        self.ui.verticalScrollBar.setMinimum(0)
+        self.ui.verticalScrollBar.setMaximum(0)
+        self.ui.verticalScrollBar.valueChanged.connect(lambda: V_Ventas.Change_ScrollBar(self.ui, self.Lista_Page_Ventas))
+
         # GroupBox que suplantan los mensajes para evitar la pérdida del foco.
         #self.ui.page .groupBox_Ingresos.setVisible(False)
         self.ui.groupBox_Promos.setVisible(False)
@@ -256,34 +252,11 @@ class MainWindow(QMainWindow):
         self.ui.line_Ingreso_Promo.returnPressed.connect(lambda: V_Ventas.Return_line_Promo(self, self.ui, self.Lista_Page_Ventas))
         self.ui.line_Ingresos.textChanged.connect(lambda: V_Ventas.Change_line_GB_Precio(self.ui))
         self.ui.line_Ingresos.returnPressed.connect(lambda: V_Ventas.Return_line_GB_Precio(self, self.ui, self.Lista_Page_Ventas))
-
+        
         self.ui.push_Uno.clicked.connect(self.imprime_wid)
 
         self.ui.stackedWidget.setCurrentIndex(0)
         self.ui.line_Codigo.setFocus()
-
-        self.lista_renglones = []
-        #self.ui.groupBox_lista.setVisible(False)
-        #self.Crea_renglon(10)
-        '''
-        color = 0
-        self.ui.frame_lista.setFixedWidth(self.ui.frame_panel.width())
-        alto = self.ui.frame_lista.height()
-        ancho = self.ui.frame_labels.width()
-        for i in range(100):
-            valor = str(i)
-            renglon = Lista_venta_2([valor, "Concepto                            r", "Cantidad", "Precio1", "Precio2"], valor, ancho, color, self.ui.groupBox_lista)
-            if color == 0: 
-                color = 1
-            else:
-                color = 0
-            renglon.setGeometry(QtCore.QRect(0, 41 * i, ancho, 41))
-            self.ui.frame_lista.setFixedSize(QtCore.QSize(ancho, 41 * (i + 1)))
-        self.Imprime()
-        '''
-
-
-
 
     def Imprime(self):
         print("ancho frame labels: {}".format(self.ui.frame_labels.width()))
@@ -360,7 +333,13 @@ class MainWindow(QMainWindow):
         self.ui.line_conf_path_red.setText(mi_vs.BASE_DATOS_PPAL)
 
         self.ui.combo_conf_cta_usu.addItem("Crear Nuevo Usuario")
-        Tabla = mdb_p.Dev_Tabla(mi_vs.BASE_CONFIG_SEC, "Usuarios")
+        try:
+            Tabla = mdb_p.Dev_Tabla(mi_vs.BASE_DATOS_PPAL, "Usuarios")
+        except:
+            try:
+                Tabla = mdb_p.Dev_Tabla(mi_vs.BASE_CONFIG_SEC, "Usuarios")
+            except:
+                pass
         for reg in Tabla:
             self.ui.combo_conf_cta_usu.addItem(reg[2])
 
@@ -382,9 +361,9 @@ class MainWindow(QMainWindow):
             if event.key() == QtCore.Qt.Key_Enter:
 
                 # VENTANA VENTAS
-                # Botón Cargar de la vtn_Ventas
+                # Botón Cargar de la vtn_Ventas. Debido a que al presionar Enter en el line_Monto genera que éste botón tenga el foco, necesitamos una bandera (pos [2]) que nos
+                    # avise que el foco fue producido por otra acción para evitar que se ejecute el código.
                 if self.ui.push_Cargar.hasFocus() and self.Lista_Page_Ventas[2] == 0:
-                    V_Ventas.Event_press_barra(self.ui, self.Lista_Page_Ventas)
                     print("Ventas-btn-cargar")
                     self.Ventas_a_Carga_Fondo()
 

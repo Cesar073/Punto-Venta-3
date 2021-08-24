@@ -35,7 +35,7 @@ class QlabelClickeable(QLabel):
         if fondo == 0:
             self.lista_val.append([255,255,255])        # 0
         else:
-            self.lista_val.append([230,230,255])        # 0
+            self.lista_val.append([210,210,230])        # 0
         self.lista_val.append([200,200,200])            # 1
         self.lista_val.append([200,200,200])            # 2
         self.lista_val.append([0,0,0])                  # 3
@@ -49,8 +49,6 @@ class QlabelClickeable(QLabel):
         
         self.setToolTip(Texto)
         
-        
-
         # Bandera para indicarle a leaveEvent y enterEvent que no deben reconfigurar el botón mientras esté apretado
         self.apretado = False
 
@@ -63,9 +61,13 @@ class QlabelClickeable(QLabel):
         if fondo == 0:
             self.lista_val[0] = [255,255,255]
             self.configuraBoton(0)
-        else:
-            self.lista_val[0] = [230,230,255]
-            self.configuraBoton(1)
+        elif fondo == 1:
+            self.lista_val[0] = [210,210,230]
+            self.configuraBoton(0)
+        elif fondo == 2:
+            self.lista_val[0] = [180,180,180]
+            self.configuraBoton(0)
+
 
     def leaveEvent(self, event):
         '''Evento de retirar el mouse de encima del label'''
