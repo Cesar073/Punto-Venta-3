@@ -578,7 +578,7 @@ class V_Ventas(QMainWindow):
         # Redimencionamos el frame que lo contiene y ajustamos el scroll si es necesario
         V_Ventas.Ajusta_Frame_Scroll(vtn_w, Lista_Datos)
 
-        # Obtenemos el nombre que se va a aplicar tanto al renglón como al layout, aunque por el momento creo que no tiene ninguna utilidad. Nos manejamos con el número de guía ya que sin importar los cambios que hayan en pantalla, no van a repetirse en una misma venta los números de guía.
+        # Obtenemos el nombre que va a ser el número de guía ya que sin importar los cambios que hayan en pantalla, no van a repetirse en una misma venta los números de guía.
         nombre = str(Lista_Datos[36])
         # El color es para que cada renglón tenga distinto fondo de manera intercalada, se indica con 0 o 1
         color = 1
@@ -588,9 +588,9 @@ class V_Ventas(QMainWindow):
         # El ancho debe conocerlo la clase del renglón, así calcula el ancho de la columna "Concepto" en función al espacio que dejan libre las otras columnas.
         ancho = vtn_w.frame_labels.width()
         # Creamos el renglón
-        renglon = Lista_venta([Lista_Datos[22][-1][0], Lista_Datos[22][-1][1], Lista_Datos[22][-1][2], Lista_Datos[22][-1][3], Lista_Datos[22][-1][4]], nombre, ancho, color)
+        renglon = Lista_venta([Lista_Datos[22][-1][0], Lista_Datos[22][-1][1], Lista_Datos[22][-1][2], Lista_Datos[22][-1][3], Lista_Datos[22][-1][4]], nombre, ancho, color, vtn_w.groupBox_7)
         # Lo colocamos dentro del layout
-        vtn_w.verticalLayout_5.addWidget(renglon)
+        #@vtn_w.verticalLayout_5.addWidget(renglon)
         # Lo ubicamos y redimencionamos 
         renglon.setGeometry(0,Lista_Datos[34][1] * (largo - 1), ancho, Lista_Datos[34][1])
         # Lo colocamos dentro de una lista para su fácil uso
@@ -1058,10 +1058,12 @@ class V_Ventas(QMainWindow):
             vtn_w.verticalScrollBar.setMaximum(max)
             vtn_w.verticalScrollBar.setValue(max)
             vtn_w.frame_lista.setGeometry(0, 0 - max, ancho, alto_renglones)
+            vtn_w.groupBox_7.setGeometry(0, 0 - max, ancho, alto_renglones)
         else:
             vtn_w.verticalScrollBar.setMaximum(0)
             vtn_w.verticalScrollBar.setValue(0)
             vtn_w.frame_lista.setGeometry(0, 0, ancho, alto_renglones)
+            vtn_w.groupBox_7.setGeometry(0, 0, ancho, alto_renglones)
         Lista_Datos[26] = False
 
     '''#############################################################################################################################################
@@ -1092,6 +1094,7 @@ class V_Ventas(QMainWindow):
         vtn_w.line_Codigo.setFocus()
         Lista_Datos[27] = False
         print("el alto es: {}".format(str(vtn_w.frame_lista.height())))
+        print("el ancho es: {}".format(str(vtn_w.frame_lista.width())))
 
     def Analiza_Producto(Lista_Datos):
         ''' (*1) Función que controla si el producto que está por cargarse (pos[23]) se puede vender en función a la configuración actual del sistema (pos[32]). Devuelve un 

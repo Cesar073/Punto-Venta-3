@@ -57,7 +57,10 @@ class MainWindow(QMainWindow):
         alto = self.ui.frame_panel.height() - self.ui.frame_labels.height()
         self.ui.frame_content_lista.setFixedHeight(alto)
 
-        
+        self.Lista_Page_Ventas[36] = 1
+        self.Lista_Page_Ventas[22] = ['1', 'Concepto', 'Unitario', 'Cant', 'SUbty']
+        V_Ventas.Crea_renglon(self, self.ui, self.Lista_Page_Ventas)
+        V_Ventas.Limpia_Foco_Cod(self.ui, self.Lista_Page_Ventas)
 
         func.Actualiza_Configuraciones(self, self.Lista_Page_Ventas)
 

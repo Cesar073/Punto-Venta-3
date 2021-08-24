@@ -1,0 +1,80 @@
+[33mcommit a428403ba28a0ef536cc134a68df859cab8bdcd8[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Merge: 6cac3e9 4803713
+Author: Cesar <cesar_argentina@yoenpython.com>
+Date:   Tue Aug 24 01:05:44 2021 -0300
+
+    Ultimo guardado
+
+[33mcommit 6cac3e99c83c56590958edb51647c1dde774903b[m
+Author: Cesar <cesar_argentina@yoenpython.com>
+Date:   Tue Aug 24 00:50:23 2021 -0300
+
+    Creando nueva rama para solucionar las listas que superan los margenes visuales de ventas
+
+[33mcommit 5d89c18e320fe5495db474357a841a64ec4cae87[m
+Merge: 000ba9b 3e54df0
+Author: Cesar <cesar_argentina@yoenpython.com>
+Date:   Thu Aug 19 12:07:01 2021 -0300
+
+    Conflictos resueltos
+
+[33mcommit 000ba9bcc401cf00eb6e1c999effe04430a04104[m
+Author: Cesar <cesar_argentina@yoenpython.com>
+Date:   Thu Aug 19 11:31:54 2021 -0300
+
+    Me estás pudriendo
+
+[33mcommit 3e54df0af5eee70e6c65a2da35334b3fe152e1a9[m[33m ([m[1;32mprueba1[m[33m)[m
+Author: Cesar <cesar_argentina@yoenpython.com>
+Date:   Thu Aug 19 11:26:42 2021 -0300
+
+    Commit desde prueba1
+
+[33mcommit 591f74b747d9c8188d62b9da48944b44e17caa14[m
+Author: Cesar <cesar_argentina@yoenpython.com>
+Date:   Thu Aug 19 11:21:43 2021 -0300
+
+    Desde consola git
+
+[33mcommit 538ed71b16a24f4080598a271bad2e6a24b8d1ea[m
+Author: Cesar <cesar_argentina@yoenpython.com>
+Date:   Thu Aug 19 10:58:39 2021 -0300
+
+    Commit en master
+
+[33mcommit acfe09547c8d9efe7fca257029849fc605538626[m
+Author: Cesar <cesar_argentina@yoenpython.com>
+Date:   Thu Aug 19 10:56:07 2021 -0300
+
+    Primer commit
+
+[33mcommit 4803713f0da19cf9de193de3b07e406eac5336e3[m[33m ([m[1;31morigin/master[m[33m)[m
+Merge: 7bf7716 240153b
+Author: Cesar <cesar_argentina@yoenpython.com>
+Date:   Wed Aug 11 20:54:21 2021 -0300
+
+    Merge branch 'master' of https://github.com/Cesar073/Ventas into master
+
+[33mcommit 7bf771698af06c944a991b4ac304ab549cc3eba4[m
+Author: Cesar <cesar_argentina@yoenpython.com>
+Date:   Wed Aug 11 20:50:50 2021 -0300
+
+    Versión 3 - Para presentación laboral
+
+[33mcommit 240153b57f574e826d816efc5cabcff6a874a1bc[m
+Author: Cesar073 <69604326+Cesar073@users.noreply.github.com>
+Date:   Sun Aug 8 20:00:37 2021 -0300
+
+    Delete main.py
+
+[33mcommit 8f8f03e4cdd1b1324db5194f6d9d45f189d7d4ec[m
+Author: Cesar <cesar_argentina@yoenpython.com>
+Date:   Sun Aug 8 19:11:04 2021 -0300
+
+    Inicio GitHub
+
+[33mcommit c128185a9913b35b7a797b45175bbec9efa6d498[m
+Author: Cesar <cesar_argentina@yoenpython.com>
+Date:   Sun Aug 8 19:06:50 2021 -0300
+
+    1er subida a GitHub
