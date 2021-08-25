@@ -588,7 +588,7 @@ class V_Ventas(QMainWindow):
         # El ancho debe conocerlo la clase del renglón, así calcula el ancho de la columna "Concepto" en función al espacio que dejan libre las otras columnas.
         ancho = vtn_w.frame_labels.width()
         # Creamos el renglón
-        renglon = Lista_venta([Lista_Datos[22][-1][0], Lista_Datos[22][-1][1], Lista_Datos[22][-1][2], Lista_Datos[22][-1][3], Lista_Datos[22][-1][4]], nombre, ancho, color, vtn_w.groupBox_7)
+        renglon = Lista_venta([Lista_Datos[22][-1][0], Lista_Datos[22][-1][1], Lista_Datos[22][-1][2], Lista_Datos[22][-1][3], Lista_Datos[22][-1][4]], nombre, ancho, color, vtn_w.frame_content_lista)
         # Lo colocamos dentro del layout
         #@vtn_w.verticalLayout_5.addWidget(renglon)
         # Lo ubicamos y redimencionamos 
