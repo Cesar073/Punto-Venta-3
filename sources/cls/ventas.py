@@ -575,9 +575,6 @@ class V_Ventas(QMainWindow):
     def Crea_renglon(vtn, vtn_w, Lista_Datos):
         '''Función que crea un renglón en la lista de productos, sólo necesita ser llamada porque toma todos los valores de las variables existentes. Tener en cuenta que para cuando es llamada la función, la Lista_Datos tanto en la pos [21] como en [22] ya deben estar actualizadas. Saber también que se encarga de asignar a cada label del renglón un evento clic, haciendo parecer que es un botón entero.'''
 
-        # Redimencionamos el frame que lo contiene y ajustamos el scroll si es necesario
-        V_Ventas.Ajusta_Frame_Scroll(vtn_w, Lista_Datos)
-
         # Obtenemos el nombre que va a ser el número de guía ya que sin importar los cambios que hayan en pantalla, no van a repetirse en una misma venta los números de guía.
         nombre = str(Lista_Datos[36])
         # El color es para que cada renglón tenga distinto fondo de manera intercalada, se indica con 0 o 1
@@ -588,9 +585,9 @@ class V_Ventas(QMainWindow):
         # El ancho debe conocerlo la clase del renglón, así calcula el ancho de la columna "Concepto" en función al espacio que dejan libre las otras columnas.
         ancho = vtn_w.frame_labels.width()
         # Creamos el renglón
-        renglon = Lista_venta([Lista_Datos[22][-1][0], Lista_Datos[22][-1][1], Lista_Datos[22][-1][2], Lista_Datos[22][-1][3], Lista_Datos[22][-1][4]], nombre, ancho, color, vtn_w.frame_content_lista)
+        renglon = Lista_venta([Lista_Datos[22][-1][0], Lista_Datos[22][-1][1], Lista_Datos[22][-1][2], Lista_Datos[22][-1][3], Lista_Datos[22][-1][4]], nombre, ancho, color)
         # Lo colocamos dentro del layout
-        #@vtn_w.verticalLayout_5.addWidget(renglon)
+        vtn_w.verticalLayout_5.addWidget(renglon, 0, QtCore.Qt.AlignTop)
         # Lo ubicamos y redimencionamos 
         renglon.setGeometry(0,Lista_Datos[34][1] * (largo - 1), ancho, Lista_Datos[34][1])
         # Lo colocamos dentro de una lista para su fácil uso
@@ -602,6 +599,9 @@ class V_Ventas(QMainWindow):
         V_Ventas.lista_renglones[-1][1].Lista_Labels[2].clicked.connect(lambda: V_Ventas.Color_seleccion(nombre, Lista_Datos))
         V_Ventas.lista_renglones[-1][1].Lista_Labels[3].clicked.connect(lambda: V_Ventas.Color_seleccion(nombre, Lista_Datos))
         V_Ventas.lista_renglones[-1][1].Lista_Labels[4].clicked.connect(lambda: V_Ventas.Color_seleccion(nombre, Lista_Datos))
+
+        # Redimencionamos el frame que lo contiene y ajustamos el scroll si es necesario
+        V_Ventas.Ajusta_Frame_Scroll(vtn_w, Lista_Datos)
     
     '''#############################################################################################################################################
                                                         FUNCIONES DEDICADAS A LAS PROMOS
@@ -761,9 +761,6 @@ class V_Ventas(QMainWindow):
             # Si es una Promo, salimos de la función
             if V_Ventas.Detecta_Promo(vtn, vtn_w, Lista_Datos, encontrado, texto) == True:
                 return
-
-            # stock = variable que indica el stock del producto.
-            stock = Lista_Datos[23][8] + Lista_Datos[23][9] + Lista_Datos[23][10]
 
             # Cuando el producto no existe
             if encontrado == 0:
@@ -1058,12 +1055,10 @@ class V_Ventas(QMainWindow):
             vtn_w.verticalScrollBar.setMaximum(max)
             vtn_w.verticalScrollBar.setValue(max)
             vtn_w.frame_lista.setGeometry(0, 0 - max, ancho, alto_renglones)
-            vtn_w.groupBox_7.setGeometry(0, 0 - max, ancho, alto_renglones)
         else:
             vtn_w.verticalScrollBar.setMaximum(0)
             vtn_w.verticalScrollBar.setValue(0)
             vtn_w.frame_lista.setGeometry(0, 0, ancho, alto_renglones)
-            vtn_w.groupBox_7.setGeometry(0, 0, ancho, alto_renglones)
         Lista_Datos[26] = False
 
     '''#############################################################################################################################################

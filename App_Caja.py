@@ -69,6 +69,11 @@ class MainWindow(QMainWindow):
     def Configura_Ventas(self):
         ''' Configuraciones de la ventana VENTAS (Botones, Señal-Slot, etc). '''
 
+        self.ui.verticalLayout_5 = QtWidgets.QVBoxLayout(self.ui.frame_lista)
+        self.ui.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.ui.verticalLayout_5.setSpacing(0)
+        self.ui.verticalLayout_5.setObjectName("verticalLayout_5")
+
         # Configuramos las imagenes de la ventana
         self.ui.push_config_cierra_ses.setIcon(QtGui.QIcon("./sources/img/icon/ses.jpg"))
         
