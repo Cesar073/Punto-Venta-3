@@ -54,12 +54,8 @@ class MainWindow(QMainWindow):
         self.Configura_Configuraciones()
 
         self.showMaximized()
-        alto = self.ui.frame_panel.height() - self.ui.frame_labels.height()
-        self.ui.frame_content_lista.setFixedHeight(alto)
+        V_Ventas.Resize_Window(self.ui, self.Lista_Page_Ventas, Ventana=True)
 
-        self.Lista_Page_Ventas[36] = 1
-        self.Lista_Page_Ventas[22].append(['1', 'Concepto', 'Unitario', 'Cant', 'SUbty'])
-        V_Ventas.Crea_renglon(self, self.ui, self.Lista_Page_Ventas)
         V_Ventas.Limpia_Foco_Cod(self.ui, self.Lista_Page_Ventas)
 
         func.Actualiza_Configuraciones(self, self.Lista_Page_Ventas)
@@ -399,6 +395,9 @@ class MainWindow(QMainWindow):
             
             # Limpiamos la acción que se haya enviado como mensaje a ésta función.
             self.Lista_Page_Ventas[2] = 0
+
+    def resizeEvent(self, event):
+        V_Ventas.Resize_Window(self.ui, self.Lista_Page_Ventas, Ventana=True)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
