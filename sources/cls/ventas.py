@@ -1037,19 +1037,31 @@ class V_Ventas(QMainWindow):
         alto_panel = vtn_w.frame_panel.height() - vtn_w.frame_labels.height()
         alto_labels = vtn_w.frame_labels.height()
         cant_renglones = len(Lista_Datos[22])
-        alto_renglones = (cant_renglones * Lista_Datos[34][1]) + cant_renglones
+        alto_uno = Lista_Datos[34][1]
+        alto_renglones = (cant_renglones * alto_uno)
         max = 0
         if alto_panel < alto_renglones:
-            max = alto_renglones - alto_panel
+            max = alto_panel - alto_renglones
+
+        # Redimencionamos y ubicamos el frame_lista        
+        vtn_w.frame_lista.setGeometry(QtCore.QRect(0, max, ancho, alto_renglones))
 
         # Si se redimencionó la app reajustamos el los frames que no se reajustan solos y que contienen las demás cosas
         if Ventana == True:
             vtn_w.frame_labels.setFixedSize(QtCore.QSize(ancho, alto_labels))
             vtn_w.frame_content_lista.setFixedSize(QtCore.QSize(ancho, alto_panel))
-            # No reajustamos el frame_lista porque lo hacemos siempre con el setGeometry
-
-        # Redimencionamos y ubicamos el frame_lista        
-        vtn_w.frame_lista.setGeometry(QtCore.QRect(0, max, ancho, alto_renglones))
+            # No reajustamos el frame_lista porque lo hacemos siempre con el setGeometry, pero sí los renglones
+            cont = 0
+            for i in V_Ventas.lista_renglones:
+                i[1].setFixedSize(QtCore.QSize(ancho, alto_uno))
+                '''
+                aux = Lista_Datos[34][1] * cont
+                i[1].Lista_Labels[1].setGeometry(QtCore.QRect(70, aux, ancho - 460, alto_uno))
+                i[1].Lista_Labels[2].setGeometry(QtCore.QRect(ancho - 390, aux, 130, alto_uno))
+                i[1].Lista_Labels[3].setGeometry(QtCore.QRect(ancho - 260, aux, 130, alto_uno))
+                i[1].Lista_Labels[4].setGeometry(QtCore.QRect(ancho - 130, aux, 130, alto_uno))
+                cont += 1
+                '''
     
         vtn_w.verticalScrollBar.setMaximum(abs(max))
         vtn_w.verticalScrollBar.setValue(abs(max))

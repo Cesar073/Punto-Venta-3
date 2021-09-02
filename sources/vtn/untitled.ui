@@ -475,7 +475,7 @@ background-color: rgb(255,255,255);
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>956</width>
+                         <width>951</width>
                          <height>45</height>
                         </rect>
                        </property>
@@ -748,7 +748,7 @@ background-color: rgb(255,255,255);
                         <rect>
                          <x>0</x>
                          <y>45</y>
-                         <width>956</width>
+                         <width>871</width>
                          <height>301</height>
                         </rect>
                        </property>
@@ -759,7 +759,7 @@ background-color: rgb(255,255,255);
                         </sizepolicy>
                        </property>
                        <property name="styleSheet">
-                        <string notr="true">background-color: rgb(85, 255, 127);</string>
+                        <string notr="true"/>
                        </property>
                        <property name="frameShape">
                         <enum>QFrame::NoFrame</enum>
@@ -795,7 +795,7 @@ background-color: rgb(255,255,255);
                          </size>
                         </property>
                         <property name="styleSheet">
-                         <string notr="true">background-color: rgb(85, 85, 0);</string>
+                         <string notr="true"/>
                         </property>
                         <property name="frameShape">
                          <enum>QFrame::NoFrame</enum>
