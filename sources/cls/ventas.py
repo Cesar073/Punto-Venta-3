@@ -95,12 +95,8 @@ class V_Ventas(QMainWindow):
 
     def Limpia_Ventana(vtn_w, Lista_Datos):
         '''Limpia todos los datos de una venta, incluyendo variables y widgets.'''
-        for i in reversed(range(vtn_w.verticalLayout_5.count())): 
-            widgetToRemove = vtn_w.verticalLayout_5.itemAt(i).widget()
-            # remove it from the layout list
-            vtn_w.verticalLayout_5.removeWidget(widgetToRemove)
-            # remove it from the gui
-            widgetToRemove.setParent(None)
+        for i in reversed(V_Ventas.lista_renglones): 
+            i[1].deleteLater()
         # Limpiamos los widgets
         vtn_w.line_Codigo.clear()
         vtn_w.label_Imagen.clear()
@@ -120,7 +116,6 @@ class V_Ventas(QMainWindow):
         Lista_Datos[29] = False
         Lista_Datos[30] = []
         Lista_Datos[31] = 0
-        Lista_Datos[36] = 0
         V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
         vtn_w.line_Codigo.setFocus()
 
@@ -210,46 +205,23 @@ class V_Ventas(QMainWindow):
             vtn_w.stackedWidget.setCurrentWidget(vtn_w.page_Ventas)
             V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
 
-    # Configura y muestra el groupbox que simula ser ventana de ingreso Productos para promociones
     def Config_Ingreso_Promo(vtn_w, Lista_Datos, Coloca = True):
-        # Parametros:
-            # Coloca= True: Por defecto, configura la pantalla para colocar el mensaje.
-            # Coloca= False: Devuelve el estado de la pantalla a la normalidad.
+        '''Configura y muestra el groupbox para el ingreso de Productos para promociones.
+            Parametros:
+            Coloca= True: Por defecto, configura la pantalla para colocar el mensaje.
+            Coloca= False: Devuelve el estado de la pantalla a la normalidad.
+        '''
         if Coloca == True:
             vtn_w.groupBox_Promos.setVisible(True)
-            vtn_w.groupBox_Datos.setEnabled(False)
-            vtn_w.listWidget_2.setEnabled(False)
-            vtn_w.listWidget_3.setEnabled(False)
-            vtn_w.listWidget_4.setEnabled(False)
-            vtn_w.listWidget_5.setEnabled(False)
-            vtn_w.listWidget_6.setEnabled(False)
-            vtn_w.push_Eliminar.setEnabled(False)
-            vtn_w.push_Limpiar_Venta.setEnabled(False)
-            vtn_w.push_Uno.setEnabled(False)
-            vtn_w.push_Dos.setEnabled(False)
-            vtn_w.push_Tres.setEnabled(False)
-            #vtn_w.groupBox_Productos.setEnabled(False)
-            #vtn_w.push_Menu.setEnabled(False)
+            vtn_w.groupBox_Ingresos.setVisible(False)
             Lista_Datos[29] = True
+            vtn_w.stackedWidget.setCurrentWidget(vtn_w.page_msjs)
             vtn_w.groupBox_Promos.setTitle("Ingrese Promo: {} de {}".format(str(Lista_Datos[30][0]), str(int(Lista_Datos[30][1]))))
             vtn_w.line_Ingreso_Promo.setFocus()
         else:
             vtn_w.line_Ingreso_Promo.clear()
-            vtn_w.groupBox_Promos.setVisible(False)
-            vtn_w.groupBox_Datos.setEnabled(True)
-            vtn_w.listWidget_2.setEnabled(True)
-            vtn_w.listWidget_3.setEnabled(True)
-            vtn_w.listWidget_4.setEnabled(True)
-            vtn_w.listWidget_5.setEnabled(True)
-            vtn_w.listWidget_6.setEnabled(True)
-            vtn_w.push_Eliminar.setEnabled(True)
-            vtn_w.push_Limpiar_Venta.setEnabled(True)
-            vtn_w.push_Uno.setEnabled(True)
-            vtn_w.push_Dos.setEnabled(True)
-            vtn_w.push_Tres.setEnabled(True)
-            #vtn_w.groupBox_Productos.setEnabled(True)
-            #vtn_w.push_Menu.setEnabled(True)
             Lista_Datos[29] = False
+            vtn_w.stackedWidget.setCurrentWidget(vtn_w.page_Ventas)
             V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
 
     def Mensaje_De_Conexion(vtn_w, msj):
@@ -535,8 +507,7 @@ class V_Ventas(QMainWindow):
     
     def Carga_Prod_Promo1(vtn, vtn_w, Lista_Datos, Cod_Promo, Nomb_Promo, Costo_Total, Lista_Cod, Lista_Cant, Lista_Precio):
         '''A ésta función se le entregan los datos de la promo y carga la promo completa tanto en la lista en pantalla como en las listas para las ventas.'''
-        # Número de Guía
-        Lista_Datos[36] += 1
+
         Numero_s = str(Lista_Datos[36])
 
         # Guardamos cada uno de los productos por separado en la lista de Venta Real
@@ -573,7 +544,7 @@ class V_Ventas(QMainWindow):
         V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
     
     def Crea_renglon(vtn, vtn_w, Lista_Datos):
-        '''Función que crea un renglón en la lista de productos, sólo necesita ser llamada porque toma todos los valores de las variables existentes. Tener en cuenta que para cuando es llamada la función, la Lista_Datos tanto en la pos [21] como en [22] ya deben estar actualizadas. Saber también que se encarga de asignar a cada label del renglón un evento clic, haciendo parecer que es un botón entero.'''
+        '''Función que crea un renglón en la lista de productos, sólo necesita ser llamada porque toma todos los valores de las variables existentes. Tener en cuenta que para cuando es llamada la función, la Lista_Datos tanto en la pos [21] como en [22] ya deben estar actualizadas. Saber también que se encarga de asignar a cada label del renglón un evento clic, haciendo parecer que es un botón entero y que no redimenciona nada, para eso está la función Resize_Window.'''
 
         # Obtenemos el nombre que va a ser el número de guía ya que sin importar los cambios que hayan en pantalla, no van a repetirse en una misma venta los números de guía.
         nombre = str(Lista_Datos[36])
@@ -583,13 +554,12 @@ class V_Ventas(QMainWindow):
         if largo % 2 == 0:
             color = 0
         # El ancho debe conocerlo la clase del renglón, así calcula el ancho de la columna "Concepto" en función al espacio que dejan libre las otras columnas.
-        ancho = vtn_w.frame_labels.width()
+        ancho = vtn_w.frame_panel_lista.width() - vtn_w.frame_scroll.width()
         # Creamos el renglón
-        renglon = Lista_venta([Lista_Datos[22][-1][0], Lista_Datos[22][-1][1], Lista_Datos[22][-1][2], Lista_Datos[22][-1][3], Lista_Datos[22][-1][4]], nombre, ancho, color)
-        # Lo colocamos dentro del layout
-        vtn_w.verticalLayout_5.addWidget(renglon, 0, QtCore.Qt.AlignTop)
+        renglon = Lista_venta([Lista_Datos[22][-1][0], Lista_Datos[22][-1][1], Lista_Datos[22][-1][2], Lista_Datos[22][-1][3], Lista_Datos[22][-1][4]], nombre, ancho, color, vtn_w.frame_lista)
         # Lo ubicamos y redimencionamos 
-        renglon.setGeometry(0,Lista_Datos[34][1] * (largo - 1), ancho, Lista_Datos[34][1])
+        renglon.setGeometry(QtCore.QRect(0,Lista_Datos[34][1] * (largo - 1), ancho, Lista_Datos[34][1]))
+        renglon.show()
         # Lo colocamos dentro de una lista para su fácil uso
         V_Ventas.lista_renglones.append([nombre, renglon])
 
@@ -601,14 +571,15 @@ class V_Ventas(QMainWindow):
         V_Ventas.lista_renglones[-1][1].Lista_Labels[4].clicked.connect(lambda: V_Ventas.Color_seleccion(nombre, Lista_Datos))
 
         # Redimencionamos el frame que lo contiene y ajustamos el scroll si es necesario
-        V_Ventas.Ajusta_Frame_Scroll(vtn_w, Lista_Datos)
+        V_Ventas.Resize_Window(vtn_w, Lista_Datos)
     
     '''#############################################################################################################################################
                                                         FUNCIONES DEDICADAS A LAS PROMOS
     #############################################################################################################################################'''
 
-    # Controla si el código cargado o el producto y cantidades cargadas pertenecen o no a una promo
     def Detecta_Promo(vtn, vtn_w, Lista_Datos, encontrado, Codigo):
+        '''Controla el último código cargado, que si es directamente el de una promo da por aceptado que quieren cargar promo, de lo contrario, se fija si es un producto y si 
+        l mismo pertenece a una promo, de ser así consulta al usuario si la desea cargar.'''
 
         # ATENCIÓN: Cuando se carga el código de una promo se sobreentiende que es lo que quieren y entonces directamente vamos a cargar la promo.
             # Pero cuando detectamos que un producto forma parte de una promo, el cliente puede o no querer la promo, por ello es que vamos a consultar antes de cargarla.
@@ -647,12 +618,15 @@ class V_Ventas(QMainWindow):
                 QMessageBox.question(vtn, "Error", msj, QMessageBox.Ok)
         return False
 
-    # Se ejecuta cuando sabemos que el cliente quiere comprar la promo, porque por ej pudo haber comprado un producto pero no quiere llevarse los 3 que componen la promo,
-        # en este caso preparamos los datos necesarios para cargar dicha promo, y luego llamamos a la función que carga la promo.
     def Acepta_Promo_Simple(vtn, vtn_w, Lista_Datos, Lista_Promo):
+        '''Se ejecuta cuando sabemos que el cliente quiere comprar la promo ya sea porque cargaron un código de promo o porque ya la aceptaron, luego preparamos los datos 
+        necesarios para cargar dicha promo, y después llamamos a la función que carga la promo.'''
         Prod_de_Promo = Lista_Promo[5]
         nomb = "PROMO: " + Lista_Promo[2]
         costo = Lista_Promo[15]
+
+        # Número de Guía
+        Lista_Datos[36] += 1
 
         # En la db hay un campo de texto con el producto, precio y cantidad, vamos a extraer de ahí esos datos
             # Nos llegan 3 listas cuyo nombre nos indica por producto sus datos
@@ -661,9 +635,13 @@ class V_Ventas(QMainWindow):
         # Cargamos la promo en las ventas(lista[15]: Monto total de la promo. lista_promo[1]: Cod de la promo)
         V_Ventas.Carga_Prod_Promo1(vtn, vtn_w, Lista_Datos, Lista_Promo[1], nomb, costo, lista_Codi, lista_Cant, lista_Pcio)
 
-    # Su función es cargar los códigos de los productos que componen la promo, una vez que sabemos que el cliente va a adquirir la promo, y actualizar los datos de los listw.
-    # El parametro Codigo, viene con el codigo del primer producto que se haya pasado por el scaner.
     def Acepta_Promo_Compleja(vtn_w, Lista_Datos, Lista_de_Promo, Codigo = "0"):
+        '''Una vez que sabemos que el cliente va a adquirir la promo, su función es cargar los códigos de los productos que componen la misma y actualizar la ventana.
+        El parametro Codigo, viene con el codigo del primer producto que se haya pasado por el scaner.'''
+
+        # Número de Guía
+        Lista_Datos[36] += 1
+
         # Obtenemos la cantidad de productos que tiene que tener la promo, los códigos y sus precios dentro de la promo
         cant = 0
         precio = 0.0
@@ -671,7 +649,7 @@ class V_Ventas(QMainWindow):
         cant, precio, lista_codigos = mi_func.Dev_Info_Promo_2_Codigos(Lista_de_Promo[5])
 
         # Datos para los ListWidgets
-        Numero_s = str(len(Lista_Datos[22]) + 1)
+        Numero_s = str(Lista_Datos[36])
         Concepto_s = "PROMO >>> " + Lista_de_Promo[2]
         P_Unitario_s = form.Formato_Decimal(precio, 2)
         Cantidad_s = form.Formato_Unidades(cant, 3)
@@ -762,11 +740,12 @@ class V_Ventas(QMainWindow):
             if V_Ventas.Detecta_Promo(vtn, vtn_w, Lista_Datos, encontrado, texto) == True:
                 return
 
-            # Cuando el producto no existe
+            # Cuando el codigo no existe
             if encontrado == 0:
                 Rta = QMessageBox.question(vtn, "Desconocido", "El código no existe.", QMessageBox.Ok)
                 V_Ventas.Limpia_Foco_Cod(vtn_w,Lista_Datos)
             else:
+                # Codigo del bulto
                 if encontrado == 2:
                     Lista_Datos[24] = Lista_Datos[23][3]
 
@@ -991,7 +970,7 @@ class V_Ventas(QMainWindow):
                 V_Ventas.Colores_de_renglones()
                 Lista_Datos[0] = 0
 
-            V_Ventas.Ajusta_Frame_Scroll(vtn_w, Lista_Datos)
+            V_Ventas.Resize_Window(vtn_w, Lista_Datos)
             V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
             V_Ventas.Suma_Venta(vtn_w, Lista_Datos)
             V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
@@ -1040,10 +1019,18 @@ class V_Ventas(QMainWindow):
             V_Ventas.lista_renglones[pos][1].Lista_Labels[3].asigna_fondo(color)
             V_Ventas.lista_renglones[pos][1].Lista_Labels[4].asigna_fondo(color)
 
-    def Ajusta_Frame_Scroll(vtn_w, Lista_Datos):
+    def Resize_Window(vtn_w, Lista_Datos, Ventana=False):
         '''Rajusta los valores del scrollbar en función a los datos actuales de la aplicación, es decir, que ya deben haberse realizado los cambios necesarios. Adicionalmente coloca la lista mostrando el último producto de la misma al final.'''
         # Nota: el valor mínimo del scroll es siempre 0.
         # Desactivamos el evento change
+
+        # Redimencionamos el frame_lista
+        alto_labels = vtn_w.frame_labels.height() + 1
+        cant_ren = len(Lista_Datos[22])
+        alto_lista = (cant_ren * Lista_Datos[34][1]) + cant_ren
+        vtn_w.frame_lista.setGeometry(QtCore.QRect(0, alto_labels, ancho, alto_lista))
+        
+
         Lista_Datos[26] = True
         cant_renglones = len(Lista_Datos[22])
         alto_renglones = (cant_renglones * Lista_Datos[34][1]) + cant_renglones
