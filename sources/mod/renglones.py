@@ -122,7 +122,7 @@ class Lista_venta(QFrame):
     def __init__(self, Lista_Texto, nomb, ancho_tot, fondo = 0, parent=None):
         super(Lista_venta, self).__init__(parent)
         
-        self.setMinimumSize(QtCore.QSize(ancho_tot, 41))
+        #self.setMinimumSize(QtCore.QSize(ancho_tot, 41))
         self.setMaximumSize(QtCore.QSize(16777215, 41))
         #self.setStyleSheet("background-color: rgb(255, 170, 127);")
         self.setFrameShape(QtWidgets.QFrame.NoFrame)
@@ -182,6 +182,10 @@ class Lista_venta(QFrame):
                 label.setAlignment(QtCore.Qt.AlignCenter)
                 label.setObjectName("label_Sub")
                 self.Lista_Labels.append(label)
+    
 
     def __del__(self):
         print("Renglón eliminado")
+
+    def resizeEvent(self, event):
+        '''Desde el exterior se llama a ésta función al momento en que se redimencionan los renglones, pero es necesario reubicar los labels.'''

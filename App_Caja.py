@@ -57,10 +57,10 @@ class MainWindow(QMainWindow):
         alto = self.ui.frame_panel.height() - self.ui.frame_labels.height()
         self.ui.frame_content_lista.setFixedHeight(alto)
 
-        self.Lista_Page_Ventas[36] = 1
-        self.Lista_Page_Ventas[22].append(['1', 'Concepto', 'Unitario', 'Cant', 'SUbty'])
-        V_Ventas.Crea_renglon(self, self.ui, self.Lista_Page_Ventas)
-        V_Ventas.Limpia_Foco_Cod(self.ui, self.Lista_Page_Ventas)
+        #self.Lista_Page_Ventas[36] = 1
+        #self.Lista_Page_Ventas[22].append(['1', 'Concepto', 'Unitario', 'Cant', 'SUbty'])
+        #V_Ventas.Crea_renglon(self, self.ui, self.Lista_Page_Ventas)
+        #V_Ventas.Limpia_Foco_Cod(self.ui, self.Lista_Page_Ventas)
 
         func.Actualiza_Configuraciones(self, self.Lista_Page_Ventas)
 
@@ -145,7 +145,7 @@ class MainWindow(QMainWindow):
             # 2: Pcio unit
             # 3: cantidad
             # 4: subtotal
-            # 5: Guía - Relación directa con el valor de "Nro" que contiene la LISTA_VENTA_MOSTRADA
+            # 5: Guía
             # 6: Caja asociada
             # 7: Codigo Promo
         LISTA_VENTA_REAL = []
@@ -182,6 +182,7 @@ class MainWindow(QMainWindow):
         # Bandera para saber si estamos esperando la contestación de una promo o no
         # Pos 29: BANDERA_PROMO = False
         self.Lista_Page_Ventas.append(False)
+
         # A la hora de ir cargando los códigos en el tipo de promo 2, se necesitan datos que es innecesario recopilar constantemente en cada acción, por ende los cargamos acá
             # para que el Return_Line_Promo tenga datos para trabajar
             # 0: Contador. Indica cuántos productos de la promo se van cargando.
@@ -192,14 +193,6 @@ class MainWindow(QMainWindow):
             # 5: Precio. Es el precio Unitario por cada producto.
             # 6: Guia. Es el valor numérico guía para relacionar la lista de venta mostrada con la real.
         # Pos 30: DATOS_PROMOS_2 = []
-        # Bandera para saber si estamos esperando la contestación de una carga de Precio, Litro, etc...
-            # 0: Es cuando estamos operando de manera normal. Se usa su valor para restaurar la ventana, y limpia variables tmb.
-            # 1: Unidad
-            # 2: Peso
-            # 3: Litros
-            # 4: cm3
-            # 5: Precio
-            # 11: Codigo
         self.Lista_Page_Ventas.append([])
 
         # Pos 31: BANDERA_PRECIO = 0
@@ -238,6 +231,14 @@ class MainWindow(QMainWindow):
         # Pos 36: Valor de referencia para cada producto de venta. Por cada producto que se carga, se le asigna un valor de referencia, que no es más que un número entero que se va incrementando desde 1. El valor es la guía que comparten las lista [21] y [22]. Si no se borran ítems, también coincidiría con el número visto en pantalla, pero, no siempre va a ser así, ya que si un elemento de pantalla se borra, su guía permanecerá intacta y los próximos productos se mantienen en aumento, perdiendo la concordancia con los números mostrados en la lista por pantalla.
         self.Lista_Page_Ventas.append(0)
 
+            # Bandera para saber si estamos esperando la contestación de una carga de Precio, Litro, etc...
+            # 0: Es cuando estamos operando de manera normal. Se usa su valor para restaurar la ventana, y limpia variables tmb.
+            # 1: Unidad
+            # 2: Peso
+            # 3: Litros
+            # 4: cm3
+            # 5: Precio
+            # 11: Codigo
 
         # CONFIGURACIONES DE WIDGETS
         self.ui.verticalScrollBar.setMinimum(0)
@@ -261,18 +262,24 @@ class MainWindow(QMainWindow):
         self.ui.line_Ingresos.textChanged.connect(lambda: V_Ventas.Change_line_GB_Precio(self.ui))
         self.ui.line_Ingresos.returnPressed.connect(lambda: V_Ventas.Return_line_GB_Precio(self, self.ui, self.Lista_Page_Ventas))
         
-        self.ui.push_Uno.clicked.connect(self.imprime_wid)
+        self.ui.push_Uno.clicked.connect(self.Imprime)
+        self.ui.push_Dos.clicked.connect(self.imprime_wid)
 
         self.ui.stackedWidget.setCurrentIndex(0)
         self.ui.line_Codigo.setFocus()
 
     def Imprime(self):
+        print("IMPRIME 1:")
+        print("ancho frame panel lista: {}".format(self.ui.frame_panel_lista.width()))
+        print("alto frame panel lista: {} \n".format(self.ui.frame_panel_lista.height()))
+        print("ancho frame panel: {}".format(self.ui.frame_panel.width()))
+        print("alto frame panel: {}\n".format(self.ui.frame_panel.height()))
         print("ancho frame labels: {}".format(self.ui.frame_labels.width()))
-        print("alto frame labels: {}".format(self.ui.frame_labels.height()))
+        print("alto frame labels: {}\n".format(self.ui.frame_labels.height()))
+        print("ancho frame content lista: {}".format(self.ui.frame_content_lista.width()))
+        print("alto frame content lista: {}".format(self.ui.frame_content_lista.height()))
         print("ancho frame lista: {}".format(self.ui.frame_lista.width()))
         print("alto frame lista: {}".format(self.ui.frame_lista.height()))
-        #print("ancho grup: {}".format(self.ui.groupBox_lista.width()))
-        #print("alto grup: {}".format(self.ui.groupBox_lista.height()))
         try:
             print("ancho RENGLON 50: {}".format(self.lista_renglones[50].width()))
             print("alto RENGLON 50: {}".format(self.lista_renglones[50].height()))
@@ -280,6 +287,7 @@ class MainWindow(QMainWindow):
             pass
 
     def imprime_wid(self):
+        print("IMPRIME 2:")
         for child in self.findChildren(QLabel):
             print(child.objectName())
 
@@ -291,7 +299,6 @@ class MainWindow(QMainWindow):
             UIFunctions_Menu.Seleccion_Pages(self.ui, "Carga Fondos")
             V_Carga_Fondo.Mostrar(self.ui, self.Lista_Page_Carga_Fondo)
         else:
-            self.Crea_renglon(100)
             QMessageBox.question(self,"Aviso", "No hay ventas para cargar", QMessageBox.Ok)
 
     ############################################################ CARGA FONDO ###########################################################
@@ -399,6 +406,9 @@ class MainWindow(QMainWindow):
             
             # Limpiamos la acción que se haya enviado como mensaje a ésta función.
             self.Lista_Page_Ventas[2] = 0
+
+    def resizeEvent(self, event):
+        V_Ventas.Evento_Rezise(self.ui, self.Lista_Page_Ventas)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
