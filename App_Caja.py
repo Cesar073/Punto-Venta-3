@@ -15,9 +15,11 @@ from PyQt5.QtWidgets import *
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QFileDialog, QInputDialog, QFrame
+import threading
+import time
 #from vtn.vtn.vtn_productos import Ui_Productos
-from PyQt5.QtGui import QIcon, QPixmap, QFont
-from PyQt5.QtCore import QDir, QSize, Qt
+#from PyQt5.QtGui import QIcon, QPixmap, QFont
+#from PyQt5.QtCore import QDir, QSize, Qt
 
 from sources.vtn.mw_ppal import Ui_MainWindow
 
@@ -26,9 +28,11 @@ from sources.cls.Functions import *
 from sources.cls.ventas import *
 from sources.cls.carga_fondo import *
 #from sources.vtn.cla_botones import Boton
+
 import sources.mod.vars as mi_vs
 import sources.mod.func as func
 import sources.mod.mdbprod as mdb_p
+import sources.mod.act as act
 from sources.mod.renglones import *
 
 class MainWindow(QMainWindow):
@@ -49,7 +53,11 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "ERROR", "No se ha podido establecer conexión con ninguna BASE DE DATOS, el programa no podrá funcionar. \nPuede cerrar el programa o reintentar la conexión desde la CONFIGURACIÓN.", QMessageBox.Ok)
             self.ui.stackedWidget.setCurrentWidget(self.ui.page_configuracion)
         else:
-            pass
+            # Una vez que realizamos la actualización de DBs que necesita el programa, vamos a actualizar los path donde deben buscarse las actualizaciones
+            for pos in range(len(mi_vs.LIST_BASE_DATOS)):
+                if pos > 0:
+                    act.lista_scan.append(mi_vs.LIST_BASE_DATOS[pos])
+        
         # Recordar que ésta función toma datos luego de haber se llamado a la función que actualiza los Path, por ende siempre debe ir dsp de ella.
         self.Configura_Configuraciones()
 
@@ -59,6 +67,9 @@ class MainWindow(QMainWindow):
         V_Ventas.Limpia_Foco_Cod(self.ui, self.Lista_Page_Ventas)
 
         func.Actualiza_Configuraciones(self, self.Lista_Page_Ventas)
+
+        # Iniciamos el bucle encargado de mantener las DBs actualizadas.
+        threading.Thread(target=self.bucleDeActualizacion).start()
 
     ############################################################## VENTAS ##############################################################
     ####################################################################################################################################
@@ -72,8 +83,6 @@ class MainWindow(QMainWindow):
 
         # Configuramos las imagenes de la ventana
         self.ui.push_config_cierra_ses.setIcon(QtGui.QIcon("./sources/img/icon/ses.jpg"))
-        
-        V_Ventas.Mensaje_De_Conexion(self.ui, 3)
 
         self.Lista_Page_Ventas = []
             
@@ -234,6 +243,7 @@ class MainWindow(QMainWindow):
         # Pos 36: Valor de referencia para cada producto de venta. Por cada producto que se carga, se le asigna un valor de referencia, que no es más que un número entero que se va incrementando desde 1. El valor es la guía que comparten las lista [21] y [22]. Si no se borran ítems, también coincidiría con el número visto en pantalla, pero, no siempre va a ser así, ya que si un elemento de pantalla se borra, su guía permanecerá intacta y los próximos productos se mantienen en aumento, perdiendo la concordancia con los números mostrados en la lista por pantalla.
         self.Lista_Page_Ventas.append(0)
 
+        # ATENCIÓN!: LA POS 37 ES CARGADA POR LA FUNCIÓN QUE SE LLAMA AL BUSCAR ACTUALIZACIONES: bucleDeActualizacion
 
         # CONFIGURACIONES DE WIDGETS
         self.ui.verticalScrollBar.setMinimum(0)
@@ -333,20 +343,115 @@ class MainWindow(QMainWindow):
         Tener en cuenta de que los datos que se mostrarán y modificarán en ésta página no podrán estar en Red debido a que de lo contrario deberíamos siempre contar con red activa. Por ende todo está por el momento en la base de datos de Configuraciones (config.db).'''
         
         # Si bien se debería encargar de sólo colocar la carpeta donde están las DB, por el momento ponemos el path de la que contiene los productos y no sólo su carpeta. Una vez que se haya implementado el sistema completo de red con todos los path, aquí se deben colocar sólo sus carpetas.
-        self.ui.line_conf_path_local.setText(mi_vs.BASE_DATOS_SEC)
-        self.ui.line_conf_path_red.setText(mi_vs.BASE_DATOS_PPAL)
+        self.ui.line_conf_path_local.setText(mi_vs.LIST_BASE_DATOS[0])
+        self.ui.line_conf_path_red.setText(mi_vs.LIST_BASE_DATOS[1])
 
         self.ui.combo_conf_cta_usu.addItem("Crear Nuevo Usuario")
-        try:
-            Tabla = mdb_p.Dev_Tabla(mi_vs.BASE_DATOS_PPAL, "Usuarios")
-        except:
+        intento = True
+        for pos in range(len(mi_vs.LIST_BASE_DATOS)):
+            if pos > 0:
+                try:
+                    Tabla = mdb_p.Dev_Tabla(mi_vs.LIST_BASE_DATOS[pos] + "config.db", "Usuarios")
+                except:
+                    intento = False
+        if intento == False:
             try:
-                Tabla = mdb_p.Dev_Tabla(mi_vs.BASE_CONFIG_SEC, "Usuarios")
+                Tabla = mdb_p.Dev_Tabla(mi_vs.LIST_BASE_DATOS[0] + "config.db", "Usuarios")
             except:
                 pass
         for reg in Tabla:
             self.ui.combo_conf_cta_usu.addItem(reg[2])
+        
+        # Ahora guardamos el nombre de la PC o terminal
+        Registro = mdb_p.Reg_Un_param(mi_vs.LIST_BASE_DATOS[0] + "config.db", "Generales", "Nombre", "Name_terminal")
+        for i in Registro:
+            mi_vs.MY_NAME = i[5]
+        print("MY_NAME: {}".format(mi_vs.MY_NAME))
+    ####################################################### ACTUALIZACIÓN DE DB ########################################################
+    ####################################################################################################################################
+    def bucleDeActualizacion(self):
+        '''Bucle que se encarga de ver en qué momento debe realizarse una actualización, ya que es quién llama periódicamente a la función para tal fin. A ésta función se la 
+            llama desde un hilo a parte para que no interfiera en las actividades de las cajas.
+            En principio se ejecuta en cada inicio del programa y luego va a estar monitoreando cada 30 minutos la red en busca de actualizaciones con la lectura de las DBs en la red. Cuando encuentre una actualización el tiempo se reducirá de 30 a 5 minutos durante 30 minutos (lo que indica que se ejecutará al menos 6 veces cada 5 minutos hasta volver a la normalidad), ya que entendemos que estamos en una situación donde por lo general son periodos de cambios de precios donde esperamos varias actualizaciones y lo importante es que estén actualizados en las cajas. Esos valores se podrán configurar a futuro.
+            También contará con un botón para que el usuario pueda llamar a la función. Cuando el usuario haga ésto, el sistema entenderá que es importante una nueva actualización y por ende, estará atento a la búsqueda de la misma, sabrá que hay una actualización y debe encontrarla, por ello, la frecuencia se aumentará a 30 segundos hasta que pueda tener conexión con alguna DB con actualizaciones.
+            En el trabajo se tiene en cuenta que las conexiones vía WiFi de las Rpi son intermitentes, por ende, nos preparamos para trabajar con y sin conexión. Por ello contamos con una copia local que es la que estamos actualizando para trabajar con ella cada vez que nos desconectamos.
+            Al mismo tiempo, puede darse un caso remoto de que estemos conectados, descarguemos una nueva actualización y la misma se demore lo suficiente como para generar algún problema a la hora de que la caja consulte la misma DB para seguir cargando ventas. Para evitar dicho problema, contaremos con 2 DB locales, así la caja trabaja con la DB1 mientras se esté realizando la actualización en la DB2. Al finalizar la actualización inmediatamente se cambian los path para que el programa siga trabajando con la DB2 y comience a actualizarse la DB1.
+            Todos los procesos deben ser informados por pantalla para que el usuario sepa la fecha, la hora de la última y el nombre de la actualización.
+            Y por último, nos manejaremos con banderas en una lista que vamos a incorporar en la posición self.Lista_Page_Ventas[37]
+            Nota: El botón manual dispara la actualización y en caso de no resultar exitosa, deja el MODO del bucle en 3, intentando cada 30 segundos.
+        '''
 
+        # Agregamos a la lista_Ventas las banderas que utilizaremos en el bucle
+            # 0: Indica si se está realizando una actualización
+            # 1: Es un ESTADO con distintos valores que significan:
+                # 0: DETENIDO. Actualizaciones detenidas.
+                # 1: NORMAL. Se ejecutan intentos de actualización cada 30 minutos.
+                # 2: ATENTO. Es cuando se ha realizado una actualización y estamos a la espera cada 5 minutos de nuevas actualizaciones.
+                # 3: MANUAL. Cuando el usuario hizo clic en actualizar y no pudo ejecutarse la misma, éste valor genera intentos de actualizarse cada 10 segundos.
+                # Indica si está en modo de MAXIMA ATENCIÓN que es cuando el usuario hizo clic para buscar actualizaciones, que entendemos q sólo sucede cuando es importante.
+        self.Lista_Page_Ventas.append([False, 1])
+        # Facilitamos el código dando un nombre a la lista completa
+        lista = self.Lista_Page_Ventas[37]
+
+        # Realizamos la primer búsqueda con el inicio del programa
+        self.buscaActualizaciones()
+
+        # VARIABLES. Configurando las mismas controlamos el comportamiento del bucle
+        # Es el tiempo para de frecuencia del time.sleep() que va a determinar las repeticiones del bucle completo.
+        time_bucle = 10
+        # Tiempo total y contador para la frecuencia de la ejecución del MODO NORMAL. (norm_tot * time_bucle = frecuencia con la que se buscarán actualizaciones)
+        norm_total = 180
+        norm_count = 0
+        # Idem anterior pero en modo ATENTO.
+        aten_total = 30
+        aten_count = 0
+
+        bucle = True
+        # El bucle va a chequear cada 10 segundos el estado de las variables para saber qué debe realizar, pero en realidad se va a ejecutar cada 1 segundo para poder actuar rápidamente en caso de que el usuario haga clic manualmente.
+        while bucle:
+
+            time.sleep(time_bucle)
+
+            # Bandera que se va a configurar durante todo el bucle para indicar si hay que buscar o no actualizaciones.
+            act = False
+
+            # Puede que casualmente se esté actualizando indicado desde fuera del bucle mediante el botón de usuario, por ende, vamos a controlar eso primero
+            if lista[0] == False:
+                
+                # En caso de estar en modo NORMAL, trabajamos cada 30 minutos
+                if lista[1] == 1:
+                    norm_count += 1
+                    if norm_count == norm_total:
+                        act = True
+                        norm_count = 0
+                
+                # En caso de estar en modo ATENTO, trabajamos cada 30 minutos
+                elif lista[1] == 2:
+                    aten_count += 1
+                    if aten_count == aten_total:
+                        act = True
+                        aten_count = 0
+
+                # Controlamos si no estamos esperando conexión para una act impulsada por el usuario que debe ejecutarse cada 10 segundos
+                elif lista[1] == 3:
+                    act = True
+
+            # Función ppal que busca actualizaciones nuevas
+            if act == True:
+                V_Ventas.Mensaje_De_Conexion(self.ui, 4, self.Lista_Page_Ventas)
+                lista[0] = True
+                self.buscaActualizaciones()
+
+    def buscaActualizaciones(self):
+        V_Ventas.Mensaje_De_Conexion(self.ui, 4, self.Lista_Page_Ventas)
+        self.Lista_Page_Ventas[37][0] = True
+        list_result = act.consultaActualizaciones(mi_vs.MY_NAME)
+        time.sleep(10)
+        self.Lista_Page_Ventas[37][0] = False
+        V_Ventas.Mensaje_De_Conexion(self.ui, 3, self.Lista_Page_Ventas)
+
+    ############################################################ SOBRE LA APP ##########################################################
+    ####################################################################################################################################
     # Recordar que esto es un rejunte de otro programa, por ende, ahora estoy intentando mezclar todos los "KeyPressEvent" en uno sólo por la cantidad de widgets que hay
     def keyPressEvent(self, event):
         '''Evento que se ejecuta siempre en la ventana. Es recomendable asignarlo luego de una actividad inusual, porque por ejemplo si yo conecto una señal con una función de 

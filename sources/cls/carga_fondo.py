@@ -20,7 +20,6 @@ SE UTILIZA PARA CULMINAR LA CARGA DE UNA VENTA INDICANDO A DÓNDE VA A IR LA PLA
 from App_Caja import *
 
 import sources.mod.form as form
-import sources.mod.mdbprom as mdbprom
 import sources.mod.mdbprod as mdbprod
 import sources.mod.mdbegen as mdbegen
 import sources.mod.vars as mi_vars

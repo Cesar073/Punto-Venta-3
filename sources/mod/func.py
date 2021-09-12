@@ -329,9 +329,6 @@ def Dev_Texto_Precios(Pcio_Total, Lista_Pcios):
 
     return Lista_part
 
-#print(Dev_Texto_Productos(200, [10.5,50.4,200.2,40.1]))
-
-
 def Actualiza_Path():
     '''Los Path's de las bases de datos los tenemos cargados en variables, ésta función actualiza dichas variables con los datos de una base de datos que tenemos que tener en ésta misma PC (./sources/db/path.db). Devuelve un número del 1 al 5 indicando la cantidad de Path que encontró, y 0 en caso de que no haya podido cargar ningún Path.
     '''
@@ -339,33 +336,18 @@ def Actualiza_Path():
     try:
         Tabla = mdbprod.Dev_Tabla("./sources/db/path.db", "url", "ID")
         for reg in Tabla:
-            # Path Base de Datos Pos 2 en la DB. REMOTA PPAL. Es la DB con la cuál se debería trabajar siempre, la más actualizada.
-            if reg[1] == "POS_2" and reg[2] != "":
-                mi_vars.BASE_DATOS_PPAL = reg[2] + "prod.db"
-                mi_vars.BASE_GENERAL_PPAL = reg[2] + "egen.db"
-                mi_vars.BASE_PROMOS_PPAL = reg[2] + "prom.db"
-                mi_vars.BASE_CONFIG_PPAL = reg[2] + "config.db"
-                mi_vars.BASE_VARIOS_PPAL = reg[2] + "vari.db"
-                count += 1
-
-            # Path Base de Datos Pos 1 en la DB. LOCAL. Es el recurso para cuando no hay conexión, o para las configuraciones locales.
-            if reg[1] == "POS_1" and reg[2] != "":
-                mi_vars.BASE_DATOS_SEC = reg[2] + "prod.db"
-                mi_vars.BASE_GENERAL_SEC = reg[2] + "egen.db"
-                mi_vars.BASE_PROMOS_SEC = reg[2] + "prom.db"
-                mi_vars.BASE_CONFIG_SEC = reg[2] + "config.db"
-                mi_vars.BASE_VARIOS_SEC = reg[2] + "vari.db"
-                count += 1
+            mi_vars.LIST_BASE_DATOS.append(reg[2])
+            count += 1
         return count
     except:
         return count
 
 def Actualiza_Configuraciones(vtn, Lista_Datos):
-    '''Sirve para actualizar variables globales en función a los datos que hayan en la db de config, valores de las configuraciones iniciales del sistema, aunque si hubieron cambios se puede volver a llamar a la función. Retorna una lista con los datos que sean necesarios, que por el momento sólo tenemos que retornar el estado de la variable que permite cargar ventas con productos desactivados.
+    '''Sirve para actualizar variables globales en función a los datos que hayan en la db local de config, valores de las configuraciones iniciales del sistema, aunque si hubieron cambios se puede volver a llamar a la función. Retorna una lista con los datos que sean necesarios, que por el momento sólo tenemos que retornar el estado de la variable que permite cargar ventas con productos desactivados.
     
     Pos 1: de 0 a 5 - Ver pos 32 de la lista de Ventas.'''
 
-    Tabla = mdbprod.Dev_Tabla(mi_vars.BASE_CONFIG_SEC, "Generales", "ID")
+    Tabla = mdbprod.Dev_Tabla(mi_vars.LIST_BASE_DATOS[0] + "config.db", "Generales", "ID")
     Rta1 = 0
     act_1 = False
     Rta2 = ""

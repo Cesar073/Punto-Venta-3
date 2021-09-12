@@ -113,6 +113,7 @@ MANEJA TODO TIPO DE INTERACCIÓN CON LA BASE DE DATOS DE LOS PRODCUTOS.
 import sqlite3
 import sources.mod.vars as mi_vs
 
+LISTA_PATH = []
 
 '''#############################################################################################################################################
     CREA PRODUCTO  '''
@@ -265,6 +266,7 @@ def Act_Productos_Segun_Codigo(CodBulto, CantBulto, Concepto, Marca, Detalle, Un
     Realiza_consulta(mi_vs.BASE_DATOS_SEC, sql)
 
 # Genera que una actualización que viene preparada en una lista, se pueda hacer dividida en variables para la función que está debajo
+''' 1 '''
 def Act_Stock_Segun_ID_Por_Lista(Lista):
     Cant1 = Lista[1]
     Cant2 = Lista[2]
@@ -307,6 +309,7 @@ def Act_Adicionales_Segun_ID(CajaAsoc, Mayorista, UltFechaVta, Siniestro, Sobran
     Realiza_consulta(mi_vs.BASE_DATOS_SEC, sql)
 
 # Genera que una actualización que viene preparada en una lista, se pueda hacer dividida en variables para la función que está debajo
+''' 1 '''
 def Act_Estadisticas_Segun_ID_Por_Lista(Lista):
     GciaSemanal = Lista[1]
     GciaMensual = Lista[2]
@@ -335,7 +338,7 @@ def Act_Promo_S_Id(Id_producto, Cod_Promo):
 '''#############################################################################################################################################
     BUSCA INFORMACIÓN DEL PRODUCTO  '''
 
-# Busca un código, si lo encuentra devuelve una variable con 0,1,2 que indican si no existe, si existe o si existe y es un código por bulto.
+# Busca un código, si lo encuentra devuelve una variable con 0,1,2,3 que indican si no existe, si existe o si existe, es un código por bulto y prod desactivado.
     # Luego una lista de lo que hay en todas las tablas
     # Y por último indica si pudo conectarse con la DB ppal o secundaria, mediante un número entero ya que pueden haber varias ppales, siendo:
         # 0: Error, no se pudo conectar con nada.
@@ -377,43 +380,37 @@ def Act_Promo_S_Id(Id_producto, Cod_Promo):
                     # pos28 = Cantidad de stock de Preaviso
                     # pos29 = Días de Preaviso
 # ACTUALIZADO CONEXIONES
+''' 1 '''
 def Dev_Info_Producto(Codigo, Todos = False):
     # El parámetro "Todos", es para indicar que busque todos los productos incluyendo los desactivados (valor 0 en stockverificado).
-    Encontrado = False
+    Encontrado = 0
     valor = 0
     Lista_Datos = []
     Conexion = 0
+    largo = len(mi_vs.LIST_BASE_DATOS)
     # Buscamos el producto según su código
-    try:
-        Reg = Reg_Un_param(mi_vs.BASE_DATOS_PPAL, "Productos", "Codigo", Codigo)
-        Encontrado, Lista_Datos = Dev_Info_Producto2(mi_vs.BASE_DATOS_PPAL, Reg)
-
-        # Si no está según su código, lo buscamos entonces según el código por bulto
-        if Encontrado == 0:
-            Reg = Reg_Un_param(mi_vs.BASE_DATOS_PPAL, "Productos", "CodBulto", Codigo)
-            Encontrado, Lista_Datos = Dev_Info_Producto2(mi_vs.BASE_DATOS_PPAL, Reg)
-            if Encontrado > 0:
-                valor = 2
-        elif Encontrado == 1:
-            valor = 1
-        Conexion = 2
-    except:
+    for pos in range(largo):
+        if pos < (largo - 1):
+            db = mi_vs.LIST_BASE_DATOS[pos + 1] + "prod.db"
+            Conexion = 2
+        else:
+            db = mi_vs.LIST_BASE_DATOS[0] + "prod.db"
+            Conexion = 1
         try:
-            Reg = Reg_Un_param(mi_vs.BASE_DATOS_SEC, "Productos", "Codigo", Codigo)
-            Encontrado, Lista_Datos = Dev_Info_Producto2(mi_vs.BASE_DATOS_SEC, Reg)
-
+            Reg = Reg_Un_param(db, "Productos", "Codigo", Codigo)
+            Encontrado, Lista_Datos = Dev_Info_Producto2(db, Reg)
 
             # Si no está según su código, lo buscamos entonces según el código por bulto
             if Encontrado == 0:
-                Reg = Reg_Un_param(mi_vs.BASE_DATOS_SEC, "Productos", "CodBulto", Codigo)
-                Encontrado, Lista_Datos = Dev_Info_Producto2(mi_vs.BASE_DATOS_SEC, Reg)
+                Reg = Reg_Un_param(db, "Productos", "CodBulto", Codigo)
+                Encontrado, Lista_Datos = Dev_Info_Producto2(db, Reg)
                 if Encontrado > 0:
                     valor = 2
             elif Encontrado == 1:
                 valor = 1
-            Conexion = 1
+            break
         except:
-            return valor, Lista_Datos, Conexion
+            pass
 
     if Encontrado > 0:
         if Todos == False and Lista_Datos[19] == 0:
@@ -537,6 +534,7 @@ def Act_Config(Valor, Nombre):
     EJECUCIÓN  '''
 # FUNCIÓN BASE DE ACTUALIZACIÓN CUANDO LA COMPARACIÓN ES NUMÉRICA
 # ACTUALIZADO CONEXIONES
+''' 1 '''
 def Act_Valor_Num(BaseDeDatos, Tabla, Col_Actualiza, Valor_Actualiza, Col_Compara, Valor_Compara):
     sql = 'UPDATE {} SET {} = {} WHERE {} = {}'.format(Tabla, Col_Actualiza, Valor_Actualiza, Col_Compara, Valor_Compara)
     Realiza_consulta(BaseDeDatos, sql)
@@ -594,6 +592,7 @@ def Dev_Dato_Int(BaseDeDatos, Tabla, ColumnaCompara, DatoCompara, ColumnaDevuelv
     return aux
 
 # DEVUELVE LA TABLA COMPLETA QUE SE HAYA SOLICITADO
+''' 1 '''
 def Dev_Tabla(BaseDeDatos, Tabla, OrdenBy = ""):
     if OrdenBy == "":
         sql = 'SELECT * FROM {}' .format(Tabla)
@@ -603,6 +602,7 @@ def Dev_Tabla(BaseDeDatos, Tabla, OrdenBy = ""):
     return Resultado
 
 # DEVUELVE UN REGISTRO BUSCADO SEGÚN UN DATO EN PARTICULAR
+''' 1 '''
 def Reg_Un_param(BaseDeDatos, Tabla, Columna, DatoCoincide):
     sql = "SELECT * FROM {} WHERE {} = '{}'" .format( Tabla, Columna, DatoCoincide)
     Resultado = Realiza_consulta(BaseDeDatos,sql)

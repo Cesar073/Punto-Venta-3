@@ -5,8 +5,8 @@
     # Luego de conocer su estado (Desactivado - Incompleto - Completo), controlamos la configuración del programa para ver si coincide con la config del prod.
     # Y luego de controlar su stock, verificar si el programa permite su venta cuando no tiene.
 
-from sources.mod.mdbegen import DB_Cajas_Totales_Cajas
-from typing import List
+#from sources.mod.mdbegen import DB_Cajas_Totales_Cajas
+#from typing import List
 from App_Caja import *
 #from sources.cls.Functions import *
 
@@ -19,27 +19,15 @@ from sources.mod.renglones import *
 
 '''
     HACER URGENTE:
-    * Controlar el funcionamiento normal de la venta completa (promos - productos especiales)
-    * Controlar la eliminación de promos y productos especiales
     * Controlar el efecto en las db.
     * Revisar todas las interacciones con las bases de datos enfocado en el nuevo método de control
     * Configurar el funcionamiento por red
-    * Controlar el ajuste de la ventana cuando se crean y eliminan productos
     * Inicio de sesión para modificación de precios (vincular con activdad en red)
-    * Controlar que pasa cuando están preguntando para confirmar por una PROMO y se cargan codigos que no tienen que ver como otros productos
-
-
-    * Controlar las funciones actuales que quedaron sin ver, las que están expandidas o tienen comentarios verdes
 
 
     CORREGIR
-    Se achicharran los renglones cuando está minimizado
-    Al cargar promo compleja, aparecieron los dos groupbox y no tenían foco
-    Se cerró cuando cargué el útlimo producto
-    
 
     SIN URGENCIA
-    La redimensión de la ventana cuando ya contiene renglones
     Forma de brindar los datos de cantidades y precio unitario
 
 
@@ -70,6 +58,7 @@ from sources.mod.renglones import *
     INCORPORAR VENTANAS TRUCHAS PARA EVITAR LA PÉRDIDA DEL FOCO.
 
     HACER PROXIMO:
+        * BOCOD podría ser un código para que se pase por el lector, y luego un código que esté en la lista para ser borrado, así, el usuario puede borrar sin soltar el lector
         * Reparar bugs al eliminar promo.
         * Controlar el Foco, para que funcione mejor, en todo momento se dirija al lugar donde corresponde, y q sepa cuando tiene que limpiar variables.
         * Que se puedan desactivar y activar promos.
@@ -248,30 +237,39 @@ class V_Ventas(QMainWindow):
             vtn_w.stackedWidget.setCurrentWidget(vtn_w.page_Ventas)
             V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
 
-    def Mensaje_De_Conexion(vtn_w, msj):
+    def Mensaje_De_Conexion(vtn_w, msj, Lista_Datos):
         '''Configura el mensaje superior referido a la conexión. msj = int (0, 1, 2 o 3)'''
         # ROJO
         r = 255
         g = 0
         b = 0
-        if msj == 0:
-            vtn_w.label.setText("DESCONECTADO")
-        elif msj == 1:
-            vtn_w.label.setText("Trabajando en: LOCAL")
-            r = 255
-            g = 170
-            b = 127
-        elif msj == 2:
-            vtn_w.label.setText("Conectado")
-            r = 35
-            g = 200
-            b = 35
-        elif msj == 3:
-            vtn_w.label.setText("Esperando actividad...")
-            r = 150
-            g = 150
-            b = 150
-        vtn_w.frame.setStyleSheet("background-color: rgb({},{},{});".format(r,g,b))
+
+        # Sólo modificamos el mensaje si no estamos realizando una actualización o una búsqueda de actualizaciones
+        if Lista_Datos[37][0] == False:
+
+            if msj == 0:
+                vtn_w.label.setText("DESCONECTADO")
+            elif msj == 1:
+                vtn_w.label.setText("Trabajando en: LOCAL")
+                r = 255
+                g = 170
+                b = 127
+            elif msj == 2:
+                vtn_w.label.setText("Conectado")
+                r = 35
+                g = 200
+                b = 35
+            elif msj == 3:
+                vtn_w.label.setText("Esperando actividad...")
+                r = 150
+                g = 150
+                b = 150
+            elif msj == 4:
+                vtn_w.label.setText("Buscando actualizaciones...")
+                r = 0
+                g = 180
+                b = 251
+            vtn_w.frame.setStyleSheet("background-color: rgb({},{},{});".format(r,g,b))
 
     '''#############################################################################################################################################
                                                         COMANDOS ESPECIALES DE VENTANA
@@ -403,6 +401,7 @@ class V_Ventas(QMainWindow):
                                     elif Tipo_Prom == 2:
                                         existe, lista_Auxiliar = mdbprom.Busca_Cod_Promo("Promos", "Codigo", ID_Promo)
                                         V_Ventas.Acepta_Promo_Compleja(vtn_w, Lista_Datos, lista_Auxiliar, Lista_Datos[23][1])
+                                        return True
 
                                 # Cuando el usuario indica NO
                                 elif texto == "+80+" or texto == "CODNO":
@@ -541,7 +540,7 @@ class V_Ventas(QMainWindow):
         for i in range(Tope):
             existe, Lista_Datos_bd, conexion = mdb_p.Dev_Info_Producto(Lista_Cod[i])
             # Luego de hacer un llamado a las bases de datos, informamos cómo resultó la conexión con el mensaje superior en ventana
-            V_Ventas.Mensaje_De_Conexion(vtn_w, conexion)
+            V_Ventas.Mensaje_De_Conexion(vtn_w, conexion, Lista_Datos)
             
             Concepto_s = "PROMO: " + Lista_Datos_bd[4] + " " + Lista_Datos_bd[5] + " " + Lista_Datos_bd[6]
             if i == Tope - 1:
@@ -580,7 +579,8 @@ class V_Ventas(QMainWindow):
         # El ancho debe conocerlo la clase del renglón, así calcula el ancho de la columna "Concepto" en función al espacio que dejan libre las otras columnas.
         ancho = vtn_w.frame_panel_lista.width() - vtn_w.frame_scroll.width()
         # Creamos el renglón
-        renglon = Lista_venta([Lista_Datos[22][-1][0], Lista_Datos[22][-1][1], Lista_Datos[22][-1][2], Lista_Datos[22][-1][3], Lista_Datos[22][-1][4]], nombre, ancho, color, vtn_w.frame_lista)
+        Nro = str(len(Lista_Datos[22]))
+        renglon = Lista_venta([Nro, Lista_Datos[22][-1][1], Lista_Datos[22][-1][2], Lista_Datos[22][-1][3], Lista_Datos[22][-1][4]], nombre, ancho, color, vtn_w.frame_lista)
         # Lo ubicamos y redimencionamos 
         renglon.setGeometry(QtCore.QRect(0,Lista_Datos[34][1] * (largo - 1), ancho, Lista_Datos[34][1]))
         renglon.show()
@@ -687,7 +687,7 @@ class V_Ventas(QMainWindow):
             listilla = []
             encontrado, listilla, conexion = mdb_p.Dev_Info_Producto(Codigo)
             # Luego de hacer un llamado a las bases de datos, informamos cómo resultó la conexión con el mensaje superior en ventana
-            V_Ventas.Mensaje_De_Conexion(vtn_w, conexion)
+            V_Ventas.Mensaje_De_Conexion(vtn_w, conexion, Lista_Datos)
             Concepto_s = "PROMO >>> {} {} {}".format(listilla[4], listilla[5], listilla[6])
             Lista_Datos[21].append([listilla[0], Concepto_s, precio, 1, precio, Numero_s, listilla[20], Lista_de_Promo[1]])
 
@@ -758,7 +758,7 @@ class V_Ventas(QMainWindow):
                 # conectado por wifi a la db ppal o si estamos trabajando de manera local.
             encontrado, Lista_Datos[23], conexion = mdb_p.Dev_Info_Producto(texto)
             # Luego de hacer un llamado a las bases de datos, informamos cómo resultó la conexión con el mensaje superior en ventana
-            V_Ventas.Mensaje_De_Conexion(vtn_w, conexion)
+            V_Ventas.Mensaje_De_Conexion(vtn_w, conexion, Lista_Datos)
 
             # Si es una Promo, salimos de la función
             if V_Ventas.Detecta_Promo(vtn, vtn_w, Lista_Datos, encontrado, texto) == True:
@@ -823,10 +823,12 @@ class V_Ventas(QMainWindow):
         '''Evento Change del line que se encuentra en las opciones del GroupBox de precios. Permite números y (, y .) pero los traduce a una única coma.'''
         vtn_w.line_Ingresos.setText(form.Line_Num_Coma_(vtn_w.line_Ingresos.text()))
 
-    # Evento Enter en el line que está dentro del groupBox que carga precios, litros, etc...
     def Return_line_GB_Precio(vtn, vtn_w, Lista_Datos):
-        
+        '''Evento Enter en el line que está dentro del groupBox que carga precios, litros, etc...'''
+
+        # La posición [31] hace referencia al tipo de valor que vamos a cargar, ver la función def Config_Ingreso_Precio
         texto = vtn_w.line_Ingresos.text()
+        # Cuando [31] = 0, es que se debe volver o se canceló. Vale 6 cuando se quiere editar el precio de un producto, y las demás opciones es para cargar precio, peso, lts...
         if Lista_Datos[31] != 6:
             if len(texto) > 0:
                 # Capturamos el texto escrito en el line
@@ -838,7 +840,6 @@ class V_Ventas(QMainWindow):
             else:
                 V_Ventas.Config_Mensaje(vtn_w, Lista_Datos)
                 V_Ventas.Config_Ingreso_Precio(vtn_w, Lista_Datos)
-                V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
         else:
             if len(texto) > 0:
                 V_Ventas.Elimina_Item(vtn, vtn_w, Lista_Datos)
@@ -846,16 +847,16 @@ class V_Ventas(QMainWindow):
                     mdb_p.Act_Valor_Num(mi_vars.BASE_DATOS_PPAL, "Stock", "PcioVta", form.Str_Float(texto), "ID", Lista_Datos[23][0])
                     vtn_w.line_Codigo.setText(Lista_Datos[23][1])
                     V_Ventas.Return_line_Cod(vtn, vtn_w, Lista_Datos)
-                    V_Ventas.Mensaje_De_Conexion(vtn_w, 2)
+                    V_Ventas.Mensaje_De_Conexion(vtn_w, 2, Lista_Datos)
                 except:
                     try:
                         mdb_p.Act_Valor_Num(mi_vars.BASE_DATOS_SEC, "Stock", "PcioVta", form.Str_Float(texto), "ID", Lista_Datos[23][0])
                         vtn_w.line_Codigo.setText(Lista_Datos[23][1])
                         V_Ventas.Return_line_Cod(vtn, vtn_w, Lista_Datos)
-                        V_Ventas.Mensaje_De_Conexion(vtn_w, 1)
+                        V_Ventas.Mensaje_De_Conexion(vtn_w, 1, Lista_Datos)
                         
                     except:
-                        V_Ventas.Mensaje_De_Conexion(vtn_w, 0)
+                        V_Ventas.Mensaje_De_Conexion(vtn_w, 0, Lista_Datos)
                 V_Ventas.Config_Ingreso_Precio(vtn_w, Lista_Datos)
                 V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
             else:
@@ -863,8 +864,9 @@ class V_Ventas(QMainWindow):
                 V_Ventas.Config_Ingreso_Precio(vtn_w, Lista_Datos)
                 V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
 
-    # Evento Enter en el line dentro del groupBox de Promos
     def Return_line_Promo(vtn, vtn_w, Lista_Datos):
+        '''Evento Enter en el line dentro del groupBox de Promos.'''
+
         texto = vtn_w.line_Ingreso_Promo.text()
 
         if len(texto) > 0:
@@ -876,7 +878,7 @@ class V_Ventas(QMainWindow):
                 if Lista_Datos[30][0] == Lista_Datos[30][1] - 1:
 
                     # Si es el último producto, guardamos en la variable de Precio, el monto de lo que debe valer el último producto cargado.
-                    Lista_Datos[30][5] = Lista_Datos[30][4][15] - Lista_Datos[30][3]
+                    Lista_Datos[30][5] = float(form.Ajusta_A_2_Dec(Lista_Datos[30][4][15] - Lista_Datos[30][3]))
 
                 else:
                     # Acumulamos la suma de lo que se viene cargando
@@ -885,18 +887,20 @@ class V_Ventas(QMainWindow):
                 listilla = []
                 encontrado, listilla, conexion = mdb_p.Dev_Info_Producto(texto)
                 # Luego de hacer un llamado a las bases de datos, informamos cómo resultó la conexión con el mensaje superior en ventana
-                V_Ventas.Mensaje_De_Conexion(vtn_w, conexion)
+                V_Ventas.Mensaje_De_Conexion(vtn_w, conexion, Lista_Datos)
                 Concepto_s = "PROMO >>> {} {} {}".format(listilla[4], listilla[5], listilla[6])
                 Lista_Datos[21].append([listilla[0], Concepto_s, Lista_Datos[30][5], 1, Lista_Datos[30][5], Lista_Datos[30][6], listilla[20], Lista_Datos[30][4][1]])
                 Lista_Datos[30][0] += 1
 
                 # Control: Si se cargó el último de la promo tenemos que devolver la pantalla.
                 if Lista_Datos[30][0] == Lista_Datos[30][1]:
-                    V_Ventas.Config_Ingreso_Promo(vtn_w, Lista_Datos, False)
+                    # Actualizamos la LISTA MOSTRADA
+                    #Lista_Datos[22].append([Lista_Datos[30][6], Lista_Datos[30][4][2], Lista_Datos[30][5], Lista_Datos[30][1], Lista_Datos[30][4][15]])
                     # Cargamos en los listW el producto
-                    V_Ventas.Actualiza_Ultimo_ListW(vtn_w, Lista_Datos)
-                    # Llamamos a la función que suma los subtotales
-                    V_Ventas.Refresca_Listas(vtn_w, Lista_Datos)
+                    V_Ventas.Crea_renglon(vtn, vtn_w, Lista_Datos)
+                    # Volvemos a la ventana normal
+                    V_Ventas.Config_Ingreso_Promo(vtn_w, Lista_Datos, False)
+                    V_Ventas.Suma_Venta(vtn_w, Lista_Datos)
                     V_Ventas.Limpia_Foco_Cod(vtn_w, Lista_Datos)
                 else:
                     vtn_w.groupBox_Promos.setTitle("Ingrese Promo: {} de {}".format(str(Lista_Datos[30][0]), str(int(Lista_Datos[30][1]))))
@@ -907,7 +911,7 @@ class V_Ventas(QMainWindow):
                 vtn_w.line_Ingreso_Promo.clear()
                 vtn_w.line_Ingreso_Promo.setFocus()
         else:
-            V_Ventas.Cancela_Promo(vtn, vtn_w, Lista_Datos)
+            V_Ventas.Cancela_Promo_2(vtn, vtn_w, Lista_Datos)
 
     def Change_line_Monto(vtn_w, Lista_Datos):
         '''Change Line Monto'''
@@ -953,25 +957,25 @@ class V_Ventas(QMainWindow):
             V_Ventas.lista_renglones[pos - 1][1].deleteLater()
             # Debemos eliminar su referencia para que no hayan más datos
             V_Ventas.lista_renglones.pop(pos - 1)
-            # Eliminamos de la lista de productos en pantalla
-            Lista_Datos[22].pop(pos-1)
-            # Eliminamos de la lista completa que hay de productos
-            texto = str(pos)
+            # Obtenemos el número de guía para trabajar con la lista [21]
+            guia = Lista_Datos[22][pos - 1][0]
             bucle = True
             cont = 0
             while bucle:
                 if cont == len(Lista_Datos[21]):
                     bucle = False
                 else:
-                    if Lista_Datos[21][cont][5] == texto:
+                    if Lista_Datos[21][cont][5] == guia:
                         Lista_Datos[21].pop(cont)
                         cont = 0
                     else:
                         cont += 1
+            # Eliminamos de la lista de productos en pantalla
+            Lista_Datos[22].pop(pos-1)
 
             # Quitamos la selección que haya y restauramos los colores como si no hubiera selección
             if pos != largo or Lista_Datos[0] > 0:
-                V_Ventas.Colores_de_renglones()
+                V_Ventas.Colores_de_renglones(Lista_Datos)
                 Lista_Datos[0] = 0
 
             V_Ventas.Resize_Window(vtn_w, Lista_Datos)
@@ -995,11 +999,13 @@ class V_Ventas(QMainWindow):
         if len(V_Ventas.lista_renglones) > 0:
             # Si había alguna selección, quitamos su color
             if Lista_Datos[0] > 0:
-                V_Ventas.Colores_de_renglones()
+                V_Ventas.Colores_de_renglones(Lista_Datos)
             # Recorremos los renglones que tenemos en la listsa_renglones, cuando encontramos el que buscamos, guardamos su valor en la variable y lo pintamos de color
+            cont = 0
             for i in V_Ventas.lista_renglones:
+                cont += 1
                 if i[1].objectName() == "frame_renglon_{}".format(guia):
-                    Lista_Datos[0] = int(guia)
+                    Lista_Datos[0] = cont
                     i[1].Lista_Labels[0].asigna_fondo(color)
                     i[1].Lista_Labels[1].asigna_fondo(color)
                     i[1].Lista_Labels[2].asigna_fondo(color)
@@ -1007,11 +1013,17 @@ class V_Ventas(QMainWindow):
                     i[1].Lista_Labels[4].asigna_fondo(color)
                     return
 
-    def Colores_de_renglones():
-        '''Recorre todos los renglones y le asigna de nuevo un color de fondo y renumera el valor de Nro de la lista.'''
+    def Colores_de_renglones(Lista_Datos):
+        '''Recorre todos los renglones, les da la ubicación que corresponde, le asigna de nuevo un color de fondo y renumera el valor de Nro de la lista.'''
         largo = len(V_Ventas.lista_renglones)
+        ancho = 0
+        alto = 0
+        if largo > 0:
+            ancho = V_Ventas.lista_renglones[0][1].width()
+            alto = V_Ventas.lista_renglones[0][1].height()
         cont = 0
         for pos in range(largo):
+            V_Ventas.lista_renglones[pos][1].setGeometry(QtCore.QRect(0, cont * Lista_Datos[34][1], ancho, alto))
             cont += 1
             color = 1
             if (pos + 1) % 2 == 0:
@@ -1054,14 +1066,6 @@ class V_Ventas(QMainWindow):
             cont = 0
             for i in V_Ventas.lista_renglones:
                 i[1].setFixedSize(QtCore.QSize(ancho, alto_uno))
-                '''
-                aux = Lista_Datos[34][1] * cont
-                i[1].Lista_Labels[1].setGeometry(QtCore.QRect(70, aux, ancho - 460, alto_uno))
-                i[1].Lista_Labels[2].setGeometry(QtCore.QRect(ancho - 390, aux, 130, alto_uno))
-                i[1].Lista_Labels[3].setGeometry(QtCore.QRect(ancho - 260, aux, 130, alto_uno))
-                i[1].Lista_Labels[4].setGeometry(QtCore.QRect(ancho - 130, aux, 130, alto_uno))
-                cont += 1
-                '''
     
         vtn_w.verticalScrollBar.setMaximum(abs(max))
         vtn_w.verticalScrollBar.setValue(abs(max))

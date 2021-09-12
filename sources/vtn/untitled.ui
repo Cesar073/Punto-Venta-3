@@ -124,7 +124,7 @@
        <item>
         <widget class="QStackedWidget" name="stackedWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="page_Ventas">
           <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -1854,7 +1854,7 @@ C: Completos</string>
                  <property name="geometry">
                   <rect>
                    <x>10</x>
-                   <y>40</y>
+                   <y>60</y>
                    <width>331</width>
                    <height>41</height>
                   </rect>
@@ -1866,28 +1866,6 @@ C: Completos</string>
                  </property>
                  <property name="styleSheet">
                   <string notr="true">background-color: white;</string>
-                 </property>
-                </widget>
-                <widget class="QPushButton" name="push_Cancela_Promo">
-                 <property name="geometry">
-                  <rect>
-                   <x>10</x>
-                   <y>90</y>
-                   <width>331</width>
-                   <height>51</height>
-                  </rect>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>20</pointsize>
-                   <italic>true</italic>
-                  </font>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">background-color: gray;</string>
-                 </property>
-                 <property name="text">
-                  <string>CANCELAR PROMO</string>
                  </property>
                 </widget>
                </widget>
