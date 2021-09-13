@@ -115,6 +115,36 @@ import sources.mod.vars as mi_vs
 
 LISTA_PATH = []
 
+# Función decoradora
+def conexion_db(sql):
+    '''
+    FUNCIÓN DECORADORA DE CONEXIÓN CON DB SQLITE3.
+    Debe ser llamada desde una función que proporcione 3 parámetros, el nombre de la db, la consulta (query), y los parámetros si es que se usan.
+    La búsqueda en las bases de datos será en orden según lo trabajado en la lista que hay en mi_vs, dejando la pos[0] para el final ya que es la local, y armando el path según el string que llegue en el parámetro db.
+
+    Intenta conectarse con las bases de datos indicada por parámetro y devuelve 2 valores:
+    1: True/False si pudo o no conectarse.
+    2: Resultado de la consulta.
+    En el caso de que no se haya podido conectar con ninguna base de datos, devolverá False y un string vacío.'''
+    def wrapper(*args):
+        db, query, parameters = sql(*args)
+        largo = len(mi_vs.LIST_BASE_DATOS)
+        for pos in range(largo):
+            if pos == largo - 1:
+                path = mi_vs.LIST_BASE_DATOS[0] + db
+            else:
+                path = mi_vs.LIST_BASE_DATOS[pos + 1] + db
+            try:
+                with sqlite3.connect(path) as conn:
+                    Cur = conn.cursor()
+                    result = Cur.execute(query, parameters)
+                    conn.commit()
+                return True, result
+            except:
+                pass
+        return False, ""
+    return wrapper
+
 '''#############################################################################################################################################
     CREA PRODUCTO  '''
 
@@ -283,9 +313,10 @@ def Act_Stock_Segun_ID_Por_Lista(Lista):
     ID_ = Lista[0]
     Act_Stock_Segun_ID(Cant1, Cant2, Cant3, Vto1, Vto2, Vto3, PcioCpa1, PcioCpa2, PcioCpa3, CantTotal, PcioVta, StockVerificado, ID_)
 # Actualiza datos de la tabla "Stock" según su ID
+@conexion_db
 def Act_Stock_Segun_ID(Cant1, Cant2, Cant3, Vto1, Vto2, Vto3, PcioCpa1, PcioCpa2, PcioCpa3, CantTotal, PcioVta, StockVerificado, ID_):
-    sql = 'UPDATE Stock SET Cant1 = {}, Cant2 = {}, Cant3 = {}, Vto1 = {}, Vto2 = {}, Vto3 = {}, PcioCpa1 = {}, PcioCpa2 = {}, PcioCpa3 = {}, CantTotal = {}, PcioVta = {}, StockVerificado = {} WHERE ID = {}' .format(Cant1, Cant2, Cant3, Vto1, Vto2, Vto3, PcioCpa1, PcioCpa2, PcioCpa3, CantTotal, PcioVta, StockVerificado, ID_)
-    Realiza_consulta(mi_vs.BASE_DATOS_SEC, sql)
+    sql = 'UPDATE Stock SET Cant1 = {}, Cant2 = {}, Cant3 = {}, Vto1 = {}, Vto2 = {}, Vto3 = {}, PcioCpa1 = {}, PcioCpa2 = {}, PcioCpa3 = {}, CantTotal = {}, PcioVta = {}, StockVerificado = {} WHERE ID = {}'.format(Cant1, Cant2, Cant3, Vto1, Vto2, Vto3, PcioCpa1, PcioCpa2, PcioCpa3, CantTotal, PcioVta, StockVerificado, ID_)
+    return "prod.db", sql, ()
 
 # Genera que una actualización que viene preparada en una lista, se pueda hacer dividida en variables para la función que está debajo
 def Act_Adicionales_Segun_ID_Por_Lista(Lista):
@@ -323,9 +354,10 @@ def Act_Estadisticas_Segun_ID_Por_Lista(Lista):
     ID_ = Lista[0]
     Act_Estadisticas_Segun_ID(GciaSemanal, GciaMensual, GciaAnual, GciaTotal, CantVendSem, CantVendMes, CantVendAnual, CantVendTotal, SiniestrosTotal, ID_)
 # Actualiza datos de la tabla "Estadisticas" según su ID
+@conexion_db
 def Act_Estadisticas_Segun_ID(GciaSemanal, GciaMensual, GciaAnual, GciaTotal, CantVendSem, CantVendMes, CantVendAnual, CantVendTotal, SiniestrosTotal, ID_):
     sql = 'UPDATE Estadistica SET GciaSemanal = {}, GciaMensual = {}, GciaAnual = {}, GciaTotal = {}, CantVendSem = {}, CantVendMes = {}, CantVendAnual = {}, CantVendTotal = {}, SiniestrosTotal = {} WHERE ID = {}'.format(GciaSemanal, GciaMensual, GciaAnual, GciaTotal, CantVendSem, CantVendMes, CantVendAnual, CantVendTotal, SiniestrosTotal, ID_)
-    Realiza_consulta(mi_vs.BASE_DATOS_SEC, sql)
+    return "prod.db", sql, ()
 
 def Act_Promo_S_Cod(Cod_producto, Cod_Promo):
     ID_ = Dev_Dato_Cod("Productos", "ID", Cod_producto)
@@ -387,34 +419,25 @@ def Dev_Info_Producto(Codigo, Todos = False):
     valor = 0
     Lista_Datos = []
     Conexion = 0
-    largo = len(mi_vs.LIST_BASE_DATOS)
+
     # Buscamos el producto según su código
-    for pos in range(largo):
-        if pos < (largo - 1):
-            db = mi_vs.LIST_BASE_DATOS[pos + 1] + "prod.db"
-            Conexion = 2
-        else:
-            db = mi_vs.LIST_BASE_DATOS[0] + "prod.db"
-            Conexion = 1
-        try:
-            Reg = Reg_Un_param(db, "Productos", "Codigo", Codigo)
-            Encontrado, Lista_Datos = Dev_Info_Producto2(db, Reg)
+    estado, Reg = Reg_Un_param("prod.db", "Productos", "Codigo", Codigo)
+    if estado == True:
+        Encontrado, Lista_Datos = Dev_Info_Producto2("prod.db", Reg)
 
-            # Si no está según su código, lo buscamos entonces según el código por bulto
-            if Encontrado == 0:
-                Reg = Reg_Un_param(db, "Productos", "CodBulto", Codigo)
-                Encontrado, Lista_Datos = Dev_Info_Producto2(db, Reg)
-                if Encontrado > 0:
-                    valor = 2
-            elif Encontrado == 1:
-                valor = 1
-            break
-        except:
-            pass
+        # Si no está según su código, lo buscamos entonces según el código por bulto
+        if Encontrado == 0:
+            estado, Reg = Reg_Un_param("prod.db", "Productos", "CodBulto", Codigo)
+            Encontrado, Lista_Datos = Dev_Info_Producto2("prod.db", Reg)
+            if Encontrado > 0:
+                valor = 2
 
-    if Encontrado > 0:
-        if Todos == False and Lista_Datos[19] == 0:
-            valor = 3
+        elif Encontrado == 1:
+            valor = 1
+
+        if Encontrado > 0:
+            if Todos == False and Lista_Datos[19] == 0:
+                valor = 3
 
     return valor, Lista_Datos, Conexion
 
@@ -439,7 +462,7 @@ def Dev_Info_Producto2(base_datos, Registro):
         Id_ = Lista_Datos[0]
 
         # Tabla: Stock
-        Reg = Reg_Un_param(base_datos, "Stock", "ID", Id_)
+        estado, Reg = Reg_Un_param(base_datos, "Stock", "ID", Id_)
         cont = 0
         for i in Reg:
             cont += 1
@@ -458,7 +481,7 @@ def Dev_Info_Producto2(base_datos, Registro):
                 Lista_Datos.append(i[12])
         
         # Tabla: Adicionales
-        Reg = Reg_Un_param(base_datos, "Adicionales", "ID", Id_)
+        estado, Reg = Reg_Un_param(base_datos, "Adicionales", "ID", Id_)
         cont = 0
         for i in Reg:
             cont += 1
@@ -488,7 +511,7 @@ def Dev_Info_Producto2(base_datos, Registro):
 def Dev_Info_Producto_S_ID(ID_):
     Lista_Datos = []    
     # Buscamos el producto según su código
-    Reg = Reg_Un_param(mi_vs.BASE_DATOS_PPAL, "Productos", "ID", ID_)
+    estado, Reg = Reg_Un_param("prod.db", "Productos", "ID", ID_)
     Encontrado, Lista_Datos = Dev_Info_Producto2(Reg)
     return Lista_Datos
 
@@ -568,7 +591,7 @@ def Dev_Tabla_Clie(Tabla):
 
 # Devuelve el total de registros de la tabla solicitada de la base de datos de clientes
 def Dev_Total_Tabla_Clie(Tabla):
-    reg = Reg_Un_param(mi_vs.BASE_CLIENTES_PPAL, "sqlite_sequence", "name", Tabla)
+    estado, reg = Reg_Un_param("prod.db", "sqlite_sequence", "name", Tabla)
     valor = 0
     for i in reg:
         valor = i[1]
@@ -602,11 +625,10 @@ def Dev_Tabla(BaseDeDatos, Tabla, OrdenBy = ""):
     return Resultado
 
 # DEVUELVE UN REGISTRO BUSCADO SEGÚN UN DATO EN PARTICULAR
-''' 1 '''
-def Reg_Un_param(BaseDeDatos, Tabla, Columna, DatoCoincide):
+@conexion_db
+def Reg_Un_param(nameDb, Tabla, Columna, DatoCoincide):
     sql = "SELECT * FROM {} WHERE {} = '{}'" .format( Tabla, Columna, DatoCoincide)
-    Resultado = Realiza_consulta(BaseDeDatos,sql)
-    return Resultado
+    return nameDb, sql, ()
 
 # Actualiza la tabla "Config", sirve para actualizar todos los totales de "Registros" que hay en cada una de las tablas
 def Act_Reg_Cant(BaseDeDatos, Cantidad, NomTabla):

@@ -42,10 +42,6 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        # Cargamos las configuraciones de cada Page o ventana
-        self.Configura_Ventas()
-        self.Configura_Carga_Fondo()
-
         # Es el primer intento de conectar con las bases de datos, siendo necesario como mínimo la conexión con la DB local.
         Estado = func.Actualiza_Path()
         if Estado == 0:
@@ -60,6 +56,9 @@ class MainWindow(QMainWindow):
         
         # Recordar que ésta función toma datos luego de haber se llamado a la función que actualiza los Path, por ende siempre debe ir dsp de ella.
         self.Configura_Configuraciones()
+        # Cargamos las configuraciones de cada Page o ventana
+        self.Configura_Ventas()
+        self.Configura_Carga_Fondo()
 
         self.showMaximized()
         V_Ventas.Resize_Window(self.ui, self.Lista_Page_Ventas, Ventana=True)
@@ -85,7 +84,7 @@ class MainWindow(QMainWindow):
         self.ui.push_config_cierra_ses.setIcon(QtGui.QIcon("./sources/img/icon/ses.jpg"))
 
         self.Lista_Page_Ventas = []
-            
+        
         # VARIABLES QUE NO SE DEBEN MODIFICAR EN EJECUCIÓN
         # Esta variable del tipo int, indica el producto que se encuentra seleccionado de la lista. Si está seleccionado el primer producto de la lista, ésta variable vale 1 y 
         # no 0.
@@ -217,7 +216,7 @@ class MainWindow(QMainWindow):
             # 3: Permite productos con stock: Desactivados / Incompletos / Completos
             # 4: Permite productos con stock: Incompletos / Completos
             # 5: Permite productos con stock: Completos
-        Registro = mdb_p.Reg_Un_param("./sources/db/config.db", "Generales", "Nombre", "Vta_Prod_Desact")
+        estado, Registro = mdb_p.Reg_Un_param("config.db", "Generales", "Nombre", "Vta_Prod_Desact")
         for Dato in Registro:
             self.Lista_Page_Ventas.append(Dato[4])
         
@@ -363,7 +362,7 @@ class MainWindow(QMainWindow):
             self.ui.combo_conf_cta_usu.addItem(reg[2])
         
         # Ahora guardamos el nombre de la PC o terminal
-        Registro = mdb_p.Reg_Un_param(mi_vs.LIST_BASE_DATOS[0] + "config.db", "Generales", "Nombre", "Name_terminal")
+        estado, Registro = mdb_p.Reg_Un_param("config.db", "Generales", "Nombre", "Name_terminal")
         for i in Registro:
             mi_vs.MY_NAME = i[5]
         print("MY_NAME: {}".format(mi_vs.MY_NAME))

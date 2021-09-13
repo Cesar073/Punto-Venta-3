@@ -50,7 +50,7 @@ class V_Carga_Fondo(QMainWindow):
         # Actualizamos la lista de FONDOS, ya que si no lo hacemos ahora, deberían reiniciar el programa cuando le agregan un nuevo FONDO
         # También generamos una lista que contiene los ID de las listas de fondos, ya que es útil luego para identificarlas al hacer clic en dicha lista
         Lista_Datos[4] = []
-        tabla = mdbegen.Dev_Tabla(mi_vars.BASE_GENERAL_PPAL, "Fondos", "Orden")
+        tabla = mdbegen.Dev_Tabla("./sources/db/egen.db", "Fondos", "Orden")
         cont = 0
         for reg in tabla:
             if reg[2] > 0:
@@ -223,7 +223,7 @@ class V_Carga_Fondo(QMainWindow):
             Lista_Stock.append(0.0)
             Lista_Stock.append(0.0)
             # Obtenemos los valores reales de la db
-            reg = mdbprod.Reg_Un_param(mi_vars.BASE_DATOS_PPAL, "Stock", "ID", ID_)
+            estado, reg = mdbprod.Reg_Un_param("prod.db", "Stock", "ID", ID_)
             # aux va a ser la cantidad a restar al stock
             aux = valor[3]
             for i in reg:
@@ -331,7 +331,7 @@ class V_Carga_Fondo(QMainWindow):
             # Aquí van la cantidad de siniestros, así que mantenemos el valor que venía por defecto
             Lista_Estadistica.append(0.0)
             # Obtenemos los valores reales de la db
-            reg = mdbprod.Reg_Un_param(mi_vars.BASE_DATOS_PPAL, "Estadistica", "ID", ID_)
+            estado, reg = mdbprod.Reg_Un_param("prod.db", "Estadistica", "ID", ID_)
             Ganancia = float(form.Ajusta_A_2_Dec(valor[4] - Pcio_cto_acum))
             for i in reg:
                 # Preparamos las ganancias
@@ -349,7 +349,7 @@ class V_Carga_Fondo(QMainWindow):
             mdbprod.Act_Estadisticas_Segun_ID_Por_Lista(Lista_Estadistica)
 
             # Se ajustan los valores de las cajas
-            reg = mdbprod.Reg_Un_param(mi_vars.BASE_GENERAL_PPAL, "Cajas", "ID", valor[6])
+            estado, reg = mdbprod.Reg_Un_param("egen.db", "Cajas", "ID", valor[6])
             situacion = 0.0
             ingresoDia = 0.0
             ingresoSem = 0.0
@@ -374,7 +374,7 @@ class V_Carga_Fondo(QMainWindow):
             cargar = False
             if i == 0:
                 cargar = True
-                reg = mdbprod.Reg_Un_param(mi_vars.BASE_GENERAL_PPAL, "Fondos", "ID", Lista_Datos[5][0])
+                estado, reg = mdbprod.Reg_Un_param("egen.db", "Fondos", "ID", Lista_Datos[5][0])
                 for n in reg:
                     situacion = n[4] + Lista_Datos[5][1]
                     ingresoDia = n[5] + Lista_Datos[5][1]
@@ -384,7 +384,7 @@ class V_Carga_Fondo(QMainWindow):
                     ingresoTot = n[9] + Lista_Datos[5][1]
             elif (i / 2) == (i // 2):
                 cargar = True
-                reg = mdbprod.Reg_Un_param(mi_vars.BASE_GENERAL_PPAL, "Fondos", "ID", Lista_Datos[5][i])
+                estado, reg = mdbprod.Reg_Un_param("egen.db", "Fondos", "ID", Lista_Datos[5][i])
                 for n in reg:
                     situacion = n[4] + Lista_Datos[5][i + 1]
                     ingresoDia = n[5] + Lista_Datos[5][i + 1]
@@ -396,7 +396,6 @@ class V_Carga_Fondo(QMainWindow):
                 cargar = False
             if cargar == True:
                 mdbegen.Act_Fondos_Ingresos_ID(situacion, ingresoDia, ingresoSem, ingresoMen, ingresoAnu, ingresoTot, Lista_Datos[5][i])
-
 
 
 

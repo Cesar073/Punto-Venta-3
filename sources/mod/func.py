@@ -278,7 +278,7 @@ def Quita_Producto_Promo(Cod_Promo):
         Reg = ""
         Id = 0
         try:
-            Reg = mdbprod.Reg_Un_param(mi_vars.BASE_DATOS_PPAL, "Adicionales", "Promo", Cod_Aux)
+            Reg = mdbprod.Reg_Un_param("prod.db", "Adicionales", "Promo", Cod_Aux)
             for pos in Reg:
                 Id = pos[0]
             if Id > 0:
@@ -296,7 +296,7 @@ def Quita_Producto_Promo(Cod_Promo):
         Reg = ""
         Id = 0
         try:
-            Reg = mdbprod.Reg_Un_param(mi_vars.BASE_DATOS_PPAL, "Adicionales", "Promo", Cod_Aux)
+            Reg = mdbprod.Reg_Un_param("prod.db", "Adicionales", "Promo", Cod_Aux)
             for pos in Reg:
                 Id = pos[0]
             if Id > 0:
