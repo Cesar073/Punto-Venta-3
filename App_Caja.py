@@ -58,6 +58,7 @@ class MainWindow(QMainWindow):
         self.Configura_Configuraciones()
         # Cargamos las configuraciones de cada Page o ventana
         self.Configura_Ventas()
+
         self.Configura_Carga_Fondo()
 
         self.showMaximized()
@@ -296,8 +297,8 @@ class MainWindow(QMainWindow):
             UIFunctions_Menu.Seleccion_Pages(self.ui, "Carga Fondos")
             V_Carga_Fondo.Mostrar(self.ui, self.Lista_Page_Carga_Fondo)
         else:
-            self.Crea_renglon(100)
             QMessageBox.question(self,"Aviso", "No hay ventas para cargar", QMessageBox.Ok)
+            V_Ventas.Limpia_Foco_Cod(self.ui, self.Lista_Page_Ventas)
 
     ############################################################ CARGA FONDO ###########################################################
     ####################################################################################################################################

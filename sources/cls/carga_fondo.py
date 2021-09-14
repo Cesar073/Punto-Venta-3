@@ -357,16 +357,16 @@ class V_Carga_Fondo(QMainWindow):
             ingresoAnu = 0.0
             ingresoTot = 0.0
             for i in reg:
-                situacion = i[3] + Pcio_vta_Cant
-                ingresoDia = i[4] + Pcio_vta_Cant
-                ingresoSem = i[5] + Pcio_vta_Cant
-                ingresoMen = i[6] + Pcio_vta_Cant
-                ingresoAnu = i[7] + Pcio_vta_Cant
-                ingresoTot = i[8] + Pcio_vta_Cant
+                situacion = float(form.Ajusta_A_2_Dec(i[3] + Pcio_vta_Cant))
+                ingresoDia = float(form.Ajusta_A_2_Dec(i[4] + Pcio_vta_Cant))
+                ingresoSem = float(form.Ajusta_A_2_Dec(i[5] + Pcio_vta_Cant))
+                ingresoMen = float(form.Ajusta_A_2_Dec(i[6] + Pcio_vta_Cant))
+                ingresoAnu = float(form.Ajusta_A_2_Dec(i[7] + Pcio_vta_Cant))
+                ingresoTot = float(form.Ajusta_A_2_Dec(i[8] + Pcio_vta_Cant))
             # Por las dudas que no haya algún error y sobreescribamos algún dato incorrecto, vamos a realizar un control
             if Pcio_vta_Cant > 0.0:
                 mdbegen.Act_Cajas_Ingresos_ID(situacion, ingresoDia, ingresoSem, ingresoMen, ingresoAnu, ingresoTot, valor[6])
-            
+        
         # Se ajustan los valores de los FONDOS
         # Recorremos la lista que indica a qué fondo ingresar la venta y el monto
         tope = len(Lista_Datos[5])
