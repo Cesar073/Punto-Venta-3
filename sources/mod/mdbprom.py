@@ -96,7 +96,16 @@ def Reg_Un_param_Int( Tabla, Columna, DatoCoincide):
             # contrario, devuelve un error como "no such column" si intentamos buscar con la otra función un dato que es del tipo string.
 def Reg_Un_param_Str( Tabla, Columna, DatoCoincide):
     sql = 'SELECT * FROM {} WHERE {} = "{}"' .format( Tabla, Columna, DatoCoincide)
-    Resultado = Realiza_consulta(mi_vars.BASE_PROMOS_PPAL, sql)
+    largo = len(mi_vars.LIST_BASE_DATOS)
+    for pos in range(largo):
+        if pos < (largo - 1):
+            db = mi_vars.LIST_BASE_DATOS[pos + 1] + "prom.db"
+        else:
+            db = mi_vars.LIST_BASE_DATOS[0] + "prom.db"
+        try:
+            Resultado = Realiza_consulta(db, sql)
+        except:
+            pass
     return Resultado
 
 # INSERTA UN REGISTRO EN LA BASE DE DATOS
@@ -111,7 +120,19 @@ def Dev_Tabla(Tabla, OrdenBy = ""):
         sql = 'SELECT * FROM {}' .format(Tabla)
     else:
         sql = 'SELECT * FROM {} ORDER BY {}'.format(Tabla, OrdenBy)
-    Resultado = Realiza_consulta(mi_vars.BASE_PROMOS_PPAL, sql)
+    
+    largo = len(mi_vars.LIST_BASE_DATOS)
+    Resultado = ""
+    for pos in range(largo):
+        if pos < (largo - 1):
+            db = mi_vars.LIST_BASE_DATOS[pos + 1] + "prom.db"
+        else:
+            db = mi_vars.LIST_BASE_DATOS[0] + "prom.db"
+        try:
+            Resultado = Realiza_consulta(db, sql)
+        except:
+            pass
+
     return Resultado
 
 # ACTUALIZA LA BASE DE DATOS

@@ -33,29 +33,10 @@ BTN_IGUAL = "¿"
     # 8: Tiene descuentos del tipo $
 INCREMENTOS = [0, 1, 0]
 
-# Path Base de Datos de Productos
-BASE_DATOS_PPAL = ""
-BASE_DATOS_SEC = ""
+# Lista de Path que corresponde a las ubicaciones necesarias para su búsqueda, luego la función le agregará el nombre pertinente de la db buscada.
+LIST_BASE_DATOS = []
 
-# Path Base de Datos de Estado General
-BASE_GENERAL_PPAL = ""
-BASE_GENERAL_SEC = ""
-
-# Path Base de Datos de las Promociones
-BASE_PROMOS_PPAL = ""
-BASE_PROMOS_SEC = ""
-
-# Path Base de Datos de las Configuraciones
-BASE_CONFIG_PPAL = ""
-BASE_CONFIG_SEC = ""
-
-# Path Base de Datos de Varios
-BASE_VARIOS_PPAL = ""
-BASE_VARIOS_SEC = ""
-
-# Path Base de Datos de Clientes
-BASE_CLIENTES_PPAL = ""
-BASE_CLIENTES_SEC = ""
+MY_NAME = ""
 
 # Cuando está en False, se le restringe todo y sólo sirve para cargar ventas
 ADMIN = False

@@ -42,12 +42,12 @@ def DB_Cajas_Totales_Cajas(ID):
 # Actualiza datos de la tabla "Cajas" según su ID, cuando hay ingresos, ventas
 def Act_Cajas_Ingresos_ID(Situacion, IngresoDia, IngresoSem, IngresoMen, IngresoAnu, IngresoTot, ID_):
     sql = 'UPDATE Cajas SET Situacion = {}, IngresoDia = {}, IngresoSem = {}, IngresoMen = {}, IngresoAnu = {}, IngresoTot = {} WHERE ID = {}'.format(Situacion, IngresoDia, IngresoSem, IngresoMen, IngresoAnu, IngresoTot, ID_)
-    Realiza_consulta(mi_vs.BASE_GENERAL_SEC, sql)
+    Realiza_consulta(mi_vs.LIST_BASE_DATOS[0] + "egen.db", sql)
 
 # Actualiza datos de la tabla "Cajas" según su ID, cuando hay ingresos, ventas
 def Act_Fondos_Ingresos_ID(Estado, IngresoDia, IngresoSem, IngresoMen, IngresoAnu, IngresoTot, ID_):
     sql = 'UPDATE Fondos SET Estado = {}, Ing_dia = {}, Ing_sem = {}, Ing_mes = {}, Ing_ano = {}, Ing_tot = {} WHERE ID = {}'.format(Estado, IngresoDia, IngresoSem, IngresoMen, IngresoAnu, IngresoTot, ID_)
-    Realiza_consulta(mi_vs.BASE_GENERAL_SEC, sql)
+    Realiza_consulta(mi_vs.LIST_BASE_DATOS[0] + "egen.db", sql)
 
 
 

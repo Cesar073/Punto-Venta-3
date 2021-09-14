@@ -1,12 +1,4 @@
-################################################################################
-##
-## BY: WANDERSON M.PIMENTA
-## PROJECT MADE WITH: Qt Designer and PySide2
-## V: 1.0.0
-##
-################################################################################
 
-## ==> GUI FILE
 import PyQt5
 from PyQt5.QtCore import QAbstractAnimation
 from App_Caja import *
@@ -17,7 +9,7 @@ FUNCIONES DE CONTENIDO Y ANIMACIONES DE LOS MENÚES
 
     Hay un primer menú que se expande y contrae. Cuando está contraído sólo muestra un ícono, cuando se expande muestra el ícono con un texto. A su vez, a su costado contamos con otro subMenú que tiene 10 botones ya preestablecidos, donde lo que hacemos es mostrar u ocultar dichos botones.
 '''
-import time
+
 class UIFunctions_Menu(MainWindow):
 
     '''###############################################################################################################################################################
