@@ -72,18 +72,18 @@ def scanActualizaciones(pc):
     2: [] Path controlado según ubicación en la lista_scan.
     3: [] Acción a realizar.
     4: [] Nombre de la base de datos a trabajar.
-    5: [] Fecha y hora de la creación de dicha actualización.
-    6: [] True/False si hay que realizar una actualización.
+    5: [] Acción a realizar, como una actualización, reemplazar una db, etc...
+    6: [] Fecha y hora de la creación de dicha actualización.
     
     El parámetro pc debe ser el nombre de la terminal que está realizando la consulta pudiendo ser PC1 a PC5, o bien desde la CAJA1 a CAJA5.'''
     
     # Listas que se devolverán en el return, donde están relacionadas entre sí correspondiendo cada posición de la misma a los resultados de las búsquedas realizadas con los path indicados en lista_scan
     scan_ = []
+    path_ = []
     update_ = []
     db_name_ = []
     action_ = []
     date_ = []
-    path_ = []
 
     # Determinamos la columna que le corresponde a la PC que está realizando la consulta
     col = 0
@@ -105,7 +105,7 @@ def scanActualizaciones(pc):
 
             # Recorremos la tabla para ver si tenemos que realizar alguna acción, de ser así retornamos los datos necesarios para tal fin
             for i in tabla:
-                if i[col] == "Nueva actualización":
+                if i[col] == "No actualizado":
                     scan_.append(True)
                     path_.append(db)
                     update_.append(True)
@@ -136,7 +136,9 @@ def scanActualizaciones(pc):
 
 def consultaActualizaciones(name_PC):
     '''Es la función que deben llamar desde fuera que se encarga de realizar toda la actividad.
-    name_PC: Nombre de la PC que llama a la función pudiendo ser por ejemplo: CAJA1'''
+    name_PC: Nombre de la PC que llama a la función pudiendo ser por ejemplo: CAJA1.
+    Devuelve una lista, con listas dentro que cada una representa tanto una conexión como también una actualización. (ver función)
+    '''
 
     # Es la lista que devolvemos con todos los datos necesarios para actualizaciones.
     list_update = []
@@ -154,17 +156,19 @@ def consultaActualizaciones(name_PC):
             # Cuando tenemos una actualización
             if update_[i] == True:
 
-                # Creamos una lista que va a contener hasta 2 datos o 3 dependiendo el caso, luego se adiciona a la lista que se retorna en la función:
+                # Creamos una lista que va a contener desde 2 datos hasta 4 dependiendo el caso, luego se adiciona a la lista que se retorna en la función:
                     # 0: T/F. Indica si el scan se hizo sin problemas. False sería cuándo no se pudo dar con la PC por desconexión o similar.
                     # 1: Acción: Indicamos por medio de un str que hay que hacer siendo opciones como: no_change, upd_price, replace, etc.
                     # 2: Datos: En caso de que haya una acción que requiera datos, se envían aquí como los precios y códigos de una act. o los path para reemplazar una db.
                     # 3: Date: En el caso de la actualización de precios que debemos contar con la variable de su fecha, lo agregamos.
+                    # 4: Url: Url de la db.
+                    # 5: NameDb: Es el nombre de la base de datos que usamos para actualizar.
                 list_aux = []
 
                 # Cuando se actualiza un precio
                 if action_[i] == "upd_price":
-
-                    ok, table = updatePrice(path_[i] + "\\" + db_name_[i] + ".db")
+                    Url = path_[i] + "/" + db_name_[i] + ".db"
+                    ok, table = updatePrice(Url)
                     if ok:
                         list_aux.append(True)
                         list_aux.append("upd_price")
@@ -176,6 +180,8 @@ def consultaActualizaciones(name_PC):
                             list_aux2.append([reg[1], reg[3]])
                         list_aux.append(list_aux2)
                         list_aux.append(return_value(date_[i],3))
+                        list_aux.append(Url)
+                        list_aux.append(db_name_[i])
 
                         if cont > 99:
                             list_update.append(list_aux)
@@ -185,11 +191,12 @@ def consultaActualizaciones(name_PC):
                         list_aux.append("no_change")
                         list_update.append(list_aux)
                 
-                # Cuando se debe reemplazar una DB completa
-                if action_[i] == "replace":
+                # Cuando se debe reemplazar la prod.db
+                if action_[i] == "replace_prod":
                     list_aux.append(True)
-                    list_aux.append("replace")
-                    list_aux.append([return_value(path_[i], 3) + "\\" + return_value(db_name_[i],3) + ".db"])
+                    list_aux.append("replace_prod")
+                    list_aux.append([return_value(path_[i], 3), return_value(db_name_[i], 3)])
+                    list_aux.append(db_name_[i])
                     list_update.append(list_aux)
             else:
                 list_update.append([True, "no_change"])

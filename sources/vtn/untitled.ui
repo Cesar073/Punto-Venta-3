@@ -57,7 +57,7 @@
        </size>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(255, 170, 127);</string>
+       <string notr="true"/>
       </property>
       <property name="frameShape">
        <enum>QFrame::NoFrame</enum>
@@ -66,14 +66,17 @@
        <enum>QFrame::Raised</enum>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
        <property name="leftMargin">
-        <number>9</number>
+        <number>0</number>
        </property>
        <property name="topMargin">
         <number>0</number>
        </property>
        <property name="rightMargin">
-        <number>9</number>
+        <number>0</number>
        </property>
        <property name="bottomMargin">
         <number>0</number>
@@ -91,6 +94,25 @@
          </property>
          <property name="text">
           <string>Reconectando...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_upd">
+         <property name="font">
+          <font>
+           <family>Unispace</family>
+           <pointsize>16</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>Reconectando...</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -124,7 +146,7 @@
        <item>
         <widget class="QStackedWidget" name="stackedWidget">
          <property name="currentIndex">
-          <number>3</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="page_Ventas">
           <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -737,169 +759,6 @@ background-color: rgb(255,255,255);
                                <height>16777215</height>
                               </size>
                              </property>
-<<<<<<< HEAD
-                             <item>
-                              <widget class="QLabel" name="label_unitario">
-                               <property name="minimumSize">
-                                <size>
-                                 <width>130</width>
-                                 <height>0</height>
-                                </size>
-                               </property>
-                               <property name="maximumSize">
-                                <size>
-                                 <width>130</width>
-                                 <height>16777215</height>
-                                </size>
-                               </property>
-                               <property name="font">
-                                <font>
-                                 <pointsize>18</pointsize>
-                                </font>
-                               </property>
-                               <property name="text">
-                                <string>Precio Unit.</string>
-                               </property>
-                               <property name="alignment">
-                                <set>Qt::AlignCenter</set>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QLabel" name="label_cant">
-                               <property name="minimumSize">
-                                <size>
-                                 <width>130</width>
-                                 <height>0</height>
-                                </size>
-                               </property>
-                               <property name="maximumSize">
-                                <size>
-                                 <width>130</width>
-                                 <height>16777215</height>
-                                </size>
-                               </property>
-                               <property name="font">
-                                <font>
-                                 <pointsize>18</pointsize>
-                                </font>
-                               </property>
-                               <property name="text">
-                                <string>Cantidad</string>
-                               </property>
-                               <property name="alignment">
-                                <set>Qt::AlignCenter</set>
-                               </property>
-                              </widget>
-                             </item>
-                             <item>
-                              <widget class="QLabel" name="label_subtotal">
-                               <property name="minimumSize">
-                                <size>
-                                 <width>130</width>
-                                 <height>0</height>
-                                </size>
-                               </property>
-                               <property name="maximumSize">
-                                <size>
-                                 <width>130</width>
-                                 <height>16777215</height>
-                                </size>
-                               </property>
-                               <property name="font">
-                                <font>
-                                 <pointsize>18</pointsize>
-                                </font>
-                               </property>
-                               <property name="text">
-                                <string>Subtotal</string>
-                               </property>
-                               <property name="alignment">
-                                <set>Qt::AlignCenter</set>
-                               </property>
-                              </widget>
-                             </item>
-                            </layout>
-                           </widget>
-                          </item>
-                         </layout>
-                        </widget>
-                       </item>
-                       <item alignment="Qt::AlignTop">
-                        <widget class="QFrame" name="frame_content_lista">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="minimumSize">
-                          <size>
-                           <width>0</width>
-                           <height>100</height>
-                          </size>
-                         </property>
-                         <property name="styleSheet">
-                          <string notr="true"/>
-                         </property>
-                         <property name="frameShape">
-                          <enum>QFrame::NoFrame</enum>
-                         </property>
-                         <property name="frameShadow">
-                          <enum>QFrame::Raised</enum>
-                         </property>
-                         <layout class="QVBoxLayout" name="verticalLayout_12">
-                          <property name="spacing">
-                           <number>0</number>
-                          </property>
-                          <property name="sizeConstraint">
-                           <enum>QLayout::SetDefaultConstraint</enum>
-                          </property>
-                          <property name="leftMargin">
-                           <number>0</number>
-                          </property>
-                          <property name="topMargin">
-                           <number>0</number>
-                          </property>
-                          <property name="rightMargin">
-                           <number>0</number>
-                          </property>
-                          <property name="bottomMargin">
-                           <number>0</number>
-                          </property>
-                          <item alignment="Qt::AlignTop">
-                           <widget class="QFrame" name="frame_lista">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>10000</height>
-                             </size>
-                            </property>
-                            <property name="frameShape">
-                             <enum>QFrame::NoFrame</enum>
-                            </property>
-                            <property name="frameShadow">
-                             <enum>QFrame::Raised</enum>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </widget>
-                       </item>
-                      </layout>
-=======
                              <property name="font">
                               <font>
                                <pointsize>18</pointsize>
@@ -980,7 +839,6 @@ background-color: rgb(255,255,255);
                         </property>
                        </widget>
                       </widget>
->>>>>>> Correcciones
                      </widget>
                     </item>
                     <item>
@@ -1028,6 +886,12 @@ background-color: rgb(255,255,255);
                           <size>
                            <width>40</width>
                            <height>0</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>40</width>
+                           <height>16777215</height>
                           </size>
                          </property>
                          <property name="orientation">

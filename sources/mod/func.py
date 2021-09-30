@@ -334,10 +334,11 @@ def Actualiza_Path():
     '''
     count = 0
     try:
-        Tabla = mdbprod.Dev_Tabla("./sources/db/path.db", "url", "ID")
+        Tabla = mdbprod.Dev_Tabla_inicio()
         for reg in Tabla:
-            mi_vars.LIST_BASE_DATOS.append(reg[2])
-            count += 1
+            if reg[2] != "":
+                mi_vars.LIST_BASE_DATOS.append(reg[2])
+                count += 1
         return count
     except:
         return count
@@ -347,7 +348,7 @@ def Actualiza_Configuraciones(vtn, Lista_Datos):
     
     Pos 1: de 0 a 5 - Ver pos 32 de la lista de Ventas.'''
 
-    Tabla = mdbprod.Dev_Tabla(mi_vars.LIST_BASE_DATOS[0] + "config.db", "Generales", "ID")
+    state, Tabla = mdbprod.Dev_Tabla(mi_vars.LIST_BASE_DATOS[0] + "config.db", "Generales", "ID")
     Rta1 = 0
     act_1 = False
     Rta2 = ""

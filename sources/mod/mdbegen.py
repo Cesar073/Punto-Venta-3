@@ -201,26 +201,6 @@ def Act_Productos_Segun_Codigo(CodBulto, CantBulto, Concepto, Marca, Detalle, Un
     sql = 'UPDATE Productos SET CodBulto = {}, CantBulto = {}, Concepto = {}, Marca = {}, Detalle = {}, UnidadMedida = {} WHERE Codigo = {}' .format(CodBulto, CantBulto, Concepto, Marca, Detalle, UnidadMedida, Codigo_)
     Realiza_consulta(mi_vs.BASE_DATOS_SEC, sql)
 
-# Genera que una actualización que viene preparada en una lista, se pueda hacer dividida en variables para la función que está debajo
-def Act_Stock_Segun_ID_Por_Lista(Lista):
-    Cant1 = Lista[1]
-    Cant2 = Lista[2]
-    Cant3 = Lista[3]
-    Vto1 = Lista[4]
-    Vto2 = Lista[5]
-    Vto3 = Lista[6]
-    PcioCpa1 = Lista[7]
-    PcioCpa2 = Lista[8]
-    PcioCpa3 = Lista[9]
-    CantTotal = Lista[10]
-    PcioVta = Lista[11]
-    StockVerificado = Lista[12]
-    ID_ = Lista[0]
-    Act_Stock_Segun_ID(Cant1, Cant2, Cant3, Vto1, Vto2, Vto3, PcioCpa1, PcioCpa2, PcioCpa3, CantTotal, PcioVta, StockVerificado, ID_)
-# Actualiza datos de la tabla "Stock" según su ID
-def Act_Stock_Segun_ID(Cant1, Cant2, Cant3, Vto1, Vto2, Vto3, PcioCpa1, PcioCpa2, PcioCpa3, CantTotal, PcioVta, StockVerificado, ID_):
-    sql = 'UPDATE Stock SET Cant1 = {}, Cant2 = {}, Cant3 = {}, Vto1 = {}, Vto2 = {}, Vto3 = {}, PcioCpa1 = {}, PcioCpa2 = {}, PcioCpa3 = {}, CantTotal = {}, PcioVta = {}, StockVerificado = {} WHERE ID = {}' .format(Cant1, Cant2, Cant3, Vto1, Vto2, Vto3, PcioCpa1, PcioCpa2, PcioCpa3, CantTotal, PcioVta, StockVerificado, ID_)
-    Realiza_consulta(mi_vs.BASE_DATOS_SEC, sql)
 
 # Genera que una actualización que viene preparada en una lista, se pueda hacer dividida en variables para la función que está debajo
 def Act_Adicionales_Segun_ID_Por_Lista(Lista):
@@ -241,10 +221,6 @@ def Act_Adicionales_Segun_ID(CajaAsoc, Mayorista, UltFechaVta, Siniestro, Sobran
     sql = 'UPDATE Adicionales SET CajaAsoc = {}, Mayorista = {}, UltFechaVta = {}, Siniestro = {}, Sobrante = {}, SinCobrar = {}, PorcGeneral = {}, PathImagen = {}, CantPreaviso = {}, DiasPreaviso = {} WHERE ID = {}' .format(CajaAsoc, Mayorista, UltFechaVta, Siniestro, Sobrante, SinCobrar, PorcGeneral, PathImagen, CantPreaviso, DiasPreaviso, ID_)
     Realiza_consulta(mi_vs.BASE_DATOS_SEC, sql)
 
-# Actualiza datos de la tabla "Estadisticas" según su ID
-def Act_Estadisticas_Segun_ID(GciaSemanal, GciaMensual, GciaAnual, GciaTotal, CantVendSem, CantVendMes, CantVendAnual, CantVendTotal, SiniestrosTotal, ID_):
-    sql = 'UPDATE Adicionales SET GciaSemanal = {}, GciaMensual = {}, GciaAnual = {}, GciaTotal = {}, CantVendSem = {}, CantVendMes = {}, CantVendAnual = {}, CantVendTotal = {}, SiniestrosTotal = {} WHERE ID = {}' .format(GciaSemanal, GciaMensual, GciaAnual, GciaTotal, CantVendSem, CantVendMes, CantVendAnual, CantVendTotal, SiniestrosTotal, ID_)
-    Realiza_consulta(mi_vs.BASE_DATOS_SEC, sql)
 
 '''#############################################################################################################################################
     BUSCA INFORMACIÓN DEL PRODUCTO  '''

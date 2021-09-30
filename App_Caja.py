@@ -1,5 +1,10 @@
-#
+#!/usr/bin/python3.7.3
 '''
+
+sources/cls/__pycache__/*.pyc
+sources/mod/__pycache__/*.pyc
+sources/vtn/__pycache__/*.pyc
+
     MODO DE TRABAJO GENERAL:
     Debido a que tenemos el código divido en diferentes módulos, éstos últimos no pueden realizar acciones de creación de instancias dentro de la ventana principal, por esto es que debemos crear y eliminar las instancias desde éste módulo. Por ejemplo, para crear un renglón de información en una venta realizada, vamos a llamar primero u una función en éste módulo que luego llama al módulo de ventas con los códigos pertinentes a su acción y una vez que establecemos que hay que crear una renglón, mediante la utilización de banderas ubicadas en la lista de datos de cada ventana, avisamos que hay que crear un renglón y esa primer función que llamamos en un principio, se encargará de hacerlo.
 
@@ -34,6 +39,7 @@ import sources.mod.func as func
 import sources.mod.mdbprod as mdb_p
 import sources.mod.act as act
 from sources.mod.renglones import *
+import sources.mod.nave as nv
 
 class MainWindow(QMainWindow):
 
@@ -69,7 +75,13 @@ class MainWindow(QMainWindow):
         func.Actualiza_Configuraciones(self, self.Lista_Page_Ventas)
 
         # Iniciamos el bucle encargado de mantener las DBs actualizadas.
-        threading.Thread(target=self.bucleDeActualizacion).start()
+        self.bucle = True
+        self.T1 = threading.Thread(target=self.bucleDeActualizacion)
+        self.T1.start()
+    
+    def closeEvent(self, event):
+        # Cerramos el bucle de esta manera, ya que en los foros he encontrado que a veces da error intentar eliminar un hilo, y no se tiene un buen control del mismo. Por ende, al quitar la validación del bucle vamos a hacer que se elimine sólo.
+        self.bucle = False
 
     ############################################################## VENTAS ##############################################################
     ####################################################################################################################################
@@ -347,16 +359,20 @@ class MainWindow(QMainWindow):
         self.ui.line_conf_path_red.setText(mi_vs.LIST_BASE_DATOS[1])
 
         self.ui.combo_conf_cta_usu.addItem("Crear Nuevo Usuario")
-        intento = True
+        intento = False
+        Tabla = ""
         for pos in range(len(mi_vs.LIST_BASE_DATOS)):
             if pos > 0:
                 try:
-                    Tabla = mdb_p.Dev_Tabla(mi_vs.LIST_BASE_DATOS[pos] + "config.db", "Usuarios")
+                    if nv.os.path.isdir(mi_vs.LIST_BASE_DATOS[pos]):
+                        Tabla = mdb_p.Dev_Tabla(mi_vs.LIST_BASE_DATOS[pos] + "config.db", "Usuarios")
+                        intento = True
                 except:
                     intento = False
         if intento == False:
             try:
-                Tabla = mdb_p.Dev_Tabla(mi_vs.LIST_BASE_DATOS[0] + "config.db", "Usuarios")
+                if nv.os.path.isdir(mi_vs.LIST_BASE_DATOS[0]):
+                    Tabla = mdb_p.Dev_Tabla_inicio(mi_vs.LIST_BASE_DATOS[0] + "config.db", "Usuarios")
             except:
                 pass
         for reg in Tabla:
@@ -367,6 +383,7 @@ class MainWindow(QMainWindow):
         for i in Registro:
             mi_vs.MY_NAME = i[5]
         print("MY_NAME: {}".format(mi_vs.MY_NAME))
+
     ####################################################### ACTUALIZACIÓN DE DB ########################################################
     ####################################################################################################################################
     def bucleDeActualizacion(self):
@@ -384,16 +401,18 @@ class MainWindow(QMainWindow):
         # Agregamos a la lista_Ventas las banderas que utilizaremos en el bucle
             # 0: Indica si se está realizando una actualización
             # 1: Es un ESTADO con distintos valores que significan:
-                # 0: DETENIDO. Actualizaciones detenidas.
+                # 0: DETENIDO. Actualizaciones detenidas por motivos de desconexión con todas las DB.
                 # 1: NORMAL. Se ejecutan intentos de actualización cada 30 minutos.
                 # 2: ATENTO. Es cuando se ha realizado una actualización y estamos a la espera cada 5 minutos de nuevas actualizaciones.
                 # 3: MANUAL. Cuando el usuario hizo clic en actualizar y no pudo ejecutarse la misma, éste valor genera intentos de actualizarse cada 10 segundos.
                 # Indica si está en modo de MAXIMA ATENCIÓN que es cuando el usuario hizo clic para buscar actualizaciones, que entendemos q sólo sucede cuando es importante.
-        self.Lista_Page_Ventas.append([False, 1])
+            # 2: Name_Last_Upd. Es el nombre de la última actualización que tuvimos, porque debemos saber siempre aunq se haya apagado la PC por ej.
+        self.Lista_Page_Ventas.append([False, 1, ""])
         # Facilitamos el código dando un nombre a la lista completa
         lista = self.Lista_Page_Ventas[37]
 
         # Realizamos la primer búsqueda con el inicio del programa
+        lista[1] = 4
         self.buscaActualizaciones()
 
         # VARIABLES. Configurando las mismas controlamos el comportamiento del bucle
@@ -406,9 +425,9 @@ class MainWindow(QMainWindow):
         aten_total = 30
         aten_count = 0
 
-        bucle = True
-        # El bucle va a chequear cada 10 segundos el estado de las variables para saber qué debe realizar, pero en realidad se va a ejecutar cada 1 segundo para poder actuar rápidamente en caso de que el usuario haga clic manualmente.
-        while bucle:
+        # El bucle va a chequear cada 10 segundos el estado de las variables para saber qué debe realizar, y si el usuario hace clic para buscar actualizaciones de manera manual, se deja avisado aquí para que el bucle no vuelva a generar lo mismo.
+        # La variable es puesta en True en el Init.
+        while self.bucle:
 
             time.sleep(time_bucle)
 
@@ -425,30 +444,145 @@ class MainWindow(QMainWindow):
                         act = True
                         norm_count = 0
                 
-                # En caso de estar en modo ATENTO, trabajamos cada 30 minutos
+                # En caso de estar en modo ATENTO, trabajamos cada 5 minutos
                 elif lista[1] == 2:
                     aten_count += 1
                     if aten_count == aten_total:
                         act = True
                         aten_count = 0
 
-                # Controlamos si no estamos esperando conexión para una act impulsada por el usuario que debe ejecutarse cada 10 segundos
+                # Controlamos si no estamos esperando conexión para una act impulsada por el usuario que debe ejecutarse cada 10 segundos. Tener en cuenta que si un usuario busca una actualización y se ejecuta, lista[1] nunca va a ser 3, ya que la actualización se ha ejecutado con éxito. Ahora bien, si se intentó actualizar y no se pudo conectar, entonces sí va a valer 3 generando que cada 10 segundos busquemos actualizaciones.
                 elif lista[1] == 3:
                     act = True
 
             # Función ppal que busca actualizaciones nuevas
             if act == True:
-                V_Ventas.Mensaje_De_Conexion(self.ui, 4, self.Lista_Page_Ventas)
                 lista[0] = True
+                lista[1] = 4
                 self.buscaActualizaciones()
 
     def buscaActualizaciones(self):
-        V_Ventas.Mensaje_De_Conexion(self.ui, 4, self.Lista_Page_Ventas)
+        '''Es la función encargada de buscar actualizaciones de las DBs y de econtrarse las aplica. También se ecarga de informar el estado por el panel de mensajes superior.'''
         self.Lista_Page_Ventas[37][0] = True
+        V_Ventas.Mensaje_De_Actualizacion(self.ui, 4, self.Lista_Page_Ventas)
         list_result = act.consultaActualizaciones(mi_vs.MY_NAME)
+        # Bandera por si hay que dar aviso de una actualización realizada
+        name_act = ""
+        # Bandera que indica que al menos se ha conectado a una DB
+        conectado = False
+        # Vamos a dar aviso en el programa que se buscaron actualizaciones, y si se conectó pero no encontró se avisará, y si se con
+        for pos in list_result:
+            if pos[0] == True:
+                conectado = True
+                if pos[1] == "upd_price":
+                    self.updatePrice(pos[2], pos[3], pos[4])
+                    name_act = pos[5]
+                elif pos[1] == "replace_prod":
+                    self.replaceDbProd(pos[2][0], pos[2][1])
+                    name_act = pos[3]
+        # TimeSleep para que el usuario alcance a ver que se está ejecutando una búsqueda, ya que si no hay conexiones disponibles disponibles ésto se ejecutaría el usuario no alcanzaría a verlo.
         time.sleep(10)
         self.Lista_Page_Ventas[37][0] = False
-        V_Ventas.Mensaje_De_Conexion(self.ui, 3, self.Lista_Page_Ventas)
+        if name_act != "":
+            self.Lista_Page_Ventas[37][2] = name_act
+        else:
+            if conectado == False:
+                self.Lista_Page_Ventas[37][1] = 0
+        
+        V_Ventas.Mensaje_De_Actualizacion(self.ui, self.Lista_Page_Ventas[37][1], self.Lista_Page_Ventas)
+
+
+    def updatePrice(self, Lista, Date, nameUpdate):
+        '''Ejecuta la actualización de precios. Para confirmar el cambio de precio de un producto, vamos a comparar la fecha y hora de la última actualización con respecto a la actualización que vamos a implementar producto por producto. En el caso de que se implementen todas las actualizaciones de una base de datos, vamos a colocar en su registro: "Hecho", de lo contrario, si en algunos productos no se ha realizado la actualización ya que hay una más reciente, vamos a colocar "Parcial" sin más detalles. Esto es suficiente para saber de que hubo alguna otra actualización en la red donde hemos actualizado con anterioridad y no vamos a sobreescribir un precio nuevo con uno viejo.'''
+        # Lo que llega en la lista son las actualizaciones de cada producto conformada por otras listas de 2 posiciones: Codigo y Precio nuevo.
+        # Usamos el valor pasado por parámetro Date para asegurarnos que debemos realizar la actualización.
+
+        try:
+            cont = 0
+            for prod in Lista:
+                dateCurrent, id_ = mdb_p.dateUpdate(prod[0])
+                if self.comparaFechas(Date, dateCurrent):
+                    mdb_p.Update_Price_Act(id_, Lista[1], nameUpdate, Date)
+                else:
+                    cont += 1
+                largo = len(Lista)
+                self.ui.label_upd.setText("[{}][{}/{}]".format(nameUpdate, cont, largo))
+        except:
+            self.ui.label_upd.setText("[{}][False]".format(nameUpdate))
+
+    def comparaFechas(self, Date1, Date2):
+        '''Las fechas que llegan deben tener el siguiente formato: AAAA-MM-DD HH:MM:SS. Como los valores están ordenados de mayor a menor, se realizan comparaciones de los mismos de izq a der, y una vez encontrado alguna diferencia devolvemos:
+        True: Cuando Date1 > Date2.
+        False: Cuando Date1 < Date2.
+        En el caso de ser iguales, que debería ser muchísima coincidencia, devolvemos True.
+        Y si alguna fecha no tiene un largo superior a 10 se considera que no es fecha. El número es elegido al azar, ya que debería venir una fecha correcta o una cadena vacía.'''
+
+        # Si una cadena es menor a 10 caracteres entonces estamos en presencia de un producto que todavía no tiene fecha cargada. Y entendiendo que Date1 es la fecha de una actualización, por ende es correcta, directamente no la controlamos para evitar más cálculos.
+        if len(Date2) < 10:
+            return True
+
+        # AÑO
+        # Primero comparamos si existen diferencias entre los años, ya que es poco frecuente ésta situación, luego sí vamos a comparar su valor.
+        if Date1[0:4] != Date2[0:4]:
+            year1 = int(Date1[0:4])
+            year2 = int(Date2[0:4])
+            if year1 < year2:
+                return False
+            else:
+                return True
+
+        # MES
+        month1 = int(Date1[5:7])
+        month2 = int(Date2[5:7])
+        if month1 > month2:
+            return True
+        else:
+            if month1 < month2:
+                return True
+        
+        # DÍA
+        day1 = int(Date1[8:10])
+        day2 = int(Date2[8:10])
+        if day1 > day2:
+            return True
+        else:
+            if day1 < day2:
+                return True
+        
+        # HORA
+        day1 = int(Date1[11:13])
+        day2 = int(Date2[11:13])
+        if day1 > day2:
+            return True
+        else:
+            if day1 < day2:
+                return True
+        
+        # MINUTO
+        day1 = int(Date1[14:16])
+        day2 = int(Date2[14:16])
+        if day1 > day2:
+            return True
+        else:
+            if day1 < day2:
+                return True
+        
+        # SEGUNDO
+        day1 = int(Date1[17:18])
+        day2 = int(Date2[17:18])
+        if day1 > day2:
+            return True
+        else:
+            if day1 < day2:
+                return True
+        
+        # IGUALDAD. Si llegamos a esta instacia es porque ambos valores son iguales, devolvemos True
+        return True
+
+    def replaceDbProd(self, Path, nameUp):
+        '''Reemplaza una base de datos según el Path que viene por parámetro. IMPORTANTE: El Path sólo debe ser la carpeta, no requerimos el nombre de la db.'''
+        nv.Copiar(Path + "/prod.db", "./sources/db/prod.db")
+        mdb_p.Update_State_Value(Path + "/config.db", mi_vs.MY_NAME, "Hecho", nameUp)
 
     ############################################################ SOBRE LA APP ##########################################################
     ####################################################################################################################################

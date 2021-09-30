@@ -19,6 +19,7 @@ import sources.mod.func as mi_func
 from sources.mod.renglones import *
 
 '''
+
     HACER URGENTE:
     * Controlar el efecto en las db.
     * Revisar todas las interacciones con las bases de datos enfocado en el nuevo método de control
@@ -268,12 +269,46 @@ class V_Ventas(QMainWindow):
                 r = 150
                 g = 150
                 b = 150
-            elif msj == 4:
-                vtn_w.label.setText("Buscando actualizaciones...")
+
+            vtn_w.label.setStyleSheet("background-color: rgb({},{},{});".format(r,g,b))
+
+    def Mensaje_De_Actualizacion(vtn_w, Tipo, Lista_Datos):
+        '''Configura el mensaje superior referido a la conexión. msj = int (0, 1, 2 o 3). La función se encarga por su cuenta de agregar al final el nombre de la última actualización realizada.'''
+        # ROJO
+        r = 255
+        g = 0
+        b = 0
+
+        new_msj = ""
+
+        # Sólo modificamos el mensaje si no estamos realizando una actualización o una búsqueda de actualizaciones
+        if Lista_Datos[37][0] == False:
+            if Lista_Datos[37][1] == 0:
+                new_msj = "DESCONECTADO"
+            elif Tipo == 1:
+                new_msj = "Normal"
+                r = 255
+                g = 170
+                b = 127
+            elif Tipo == 2:
+                new_msj = "Atento"
+                r = 35
+                g = 200
+                b = 35
+            elif Tipo == 3:
+                new_msj = "Manual"
+                r = 150
+                g = 150
+                b = 150
+            elif Tipo == 4:
+                new_msj = "Buscando actualizaciones..."
                 r = 0
                 g = 180
                 b = 251
-            vtn_w.frame.setStyleSheet("background-color: rgb({},{},{});".format(r,g,b))
+            # Siempre al msj vamos a agregarle la última actualización ejecutada, así haya ocurrido hace días
+            new_msj += " /// Ult. Act: [{}]".format(Lista_Datos[37][2])
+            vtn_w.label_upd.setText(new_msj)
+            vtn_w.label_upd.setStyleSheet("background-color: rgb({},{},{});".format(r,g,b))
 
     '''#############################################################################################################################################
                                                         COMANDOS ESPECIALES DE VENTANA
@@ -528,7 +563,6 @@ class V_Ventas(QMainWindow):
             # Agregamos un renglón
             # Redimencionamos el frame que lo contiene y ajustamos el scroll si es necesario
             threading.Thread(target=V_Ventas.Espera_renglon, args=(vtn, vtn_w, Lista_Datos, Lista_Datos[36], True,)).start()
-            #V_Ventas.Ajusta_Frame_Scroll(vtn_w, Lista_Datos)
             V_Ventas.Crea_renglon(vtn, vtn_w, Lista_Datos)
             
             V_Ventas.Suma_Venta(vtn_w, Lista_Datos)
@@ -564,8 +598,7 @@ class V_Ventas(QMainWindow):
         
         # Cargamos en los listW el producto
         # Redimencionamos el frame que lo contiene y ajustamos el scroll si es necesario
-        #V_Ventas.Espera_renglon(vtn, vtn_w, Lista_Datos, Numero_s, True)
-        V_Ventas.Ajusta_Frame_Scroll(vtn_w, Lista_Datos)
+        V_Ventas.Resize_Window(vtn_w, Lista_Datos)
         V_Ventas.Crea_renglon(vtn, vtn_w, Lista_Datos)
 
         # Desactiva el sistema de promo
@@ -918,6 +951,7 @@ class V_Ventas(QMainWindow):
                     # Actualizamos la LISTA MOSTRADA
                     #Lista_Datos[22].append([Lista_Datos[30][6], Lista_Datos[30][4][2], Lista_Datos[30][5], Lista_Datos[30][1], Lista_Datos[30][4][15]])
                     # Cargamos en los listW el producto
+                    V_Ventas.Resize_Window(vtn_w, Lista_Datos)
                     V_Ventas.Crea_renglon(vtn, vtn_w, Lista_Datos)
                     # Volvemos a la ventana normal
                     V_Ventas.Config_Ingreso_Promo(vtn_w, Lista_Datos, False)
@@ -1070,8 +1104,8 @@ class V_Ventas(QMainWindow):
         Lista_Datos[26] = True
 
         # Variables
-        ancho = vtn_w.frame_panel.width()
-        alto_panel = vtn_w.frame_panel.height() - vtn_w.frame_labels.height()
+        ancho = vtn_w.frame_panel_lista.width() - vtn_w.frame_scroll.width()
+        alto_panel = vtn_w.frame_panel_lista.height() - vtn_w.frame_labels.height()
         alto_labels = vtn_w.frame_labels.height()
         cant_renglones = len(Lista_Datos[22])
         alto_uno = Lista_Datos[34][1]
@@ -1085,6 +1119,7 @@ class V_Ventas(QMainWindow):
 
         # Si se redimencionó la app reajustamos el los frames que no se reajustan solos y que contienen las demás cosas
         if Ventana == True:
+            vtn_w.frame_panel.setFixedSize(QtCore.QSize(ancho, vtn_w.frame_panel_lista.height()))
             vtn_w.frame_labels.setFixedSize(QtCore.QSize(ancho, alto_labels))
             vtn_w.frame_content_lista.setFixedSize(QtCore.QSize(ancho, alto_panel))
             # No reajustamos el frame_lista porque lo hacemos siempre con el setGeometry, pero sí los renglones
@@ -1098,56 +1133,6 @@ class V_Ventas(QMainWindow):
         Lista_Datos[26] = False
         V_Ventas.Imprime(vtn_w)
         print("FIN: Ajusta_Frame_Scroll 1100")
-
-    def Evento_Rezise(vtn_w, Lista_Datos):
-        '''Cuando se redimenciona la ventana, algunos layout no se ajustan automáticamente al tamaño que esperamos, así que lo realizamos manualmente.'''
-        
-        # El frame_panel_lista es la guía, porque es el panel que se ajusta correctamente al máximo que necesitamos y dentro de él se acomodan los demás.
-        # El frame_panel, contiene otros incluyendo el título de las columnas, a éste lo ajustamos restando el espacio que el título usa.
-        # El frame_labels, es el título de las columna, un frame que permanece fijo.
-        # El frame_content_lista, es el que debe reajustarse al espacio que queda dentro del frame_panel luego de restar el título. Funciona como ventana para ver los prod.
-        # El frame_lista, es quién contiene las listas, debe ajustarse manualmente ya que si no tiene el tamaño que los renglones usan se comporta con error, por ejemplo, si
-            # su tamaño es mayor, los renglones de muestran dispersos, si su tamaño es menor, los renglones se empiezan a encimar, y en el caso de que la lista de productos es
-            # superior a lo que puede mostrarse en pantalla, éste frame debe tener ese valor también superior ya que eso va a hacer que los renglones se sigan viendo correctam-
-            # mente porque el frame_content_lista funciona como ventana mostrando los que puedan verse. En ese momento se activa el scrollBar para poder observar los que no
-            # llegan a aparecer en pantalla.
-
-        # AJUSTAMOS frame_panel
-        alto_panel = vtn_w.frame_panel_lista.height()
-        ancho = vtn_w.frame_labels.width()
-        vtn_w.frame_panel.setMinimumSize(QtCore.QSize(ancho, alto_panel))
-        
-        # AJUSTAMOS frame_content_lista
-        alto = alto_panel - vtn_w.frame_labels.height()        
-        vtn_w.frame_content_lista.setMinimumSize(QtCore.QSize(ancho, alto))
-
-        # AJUSTAMOS frame_lista
-        cant_renglones = len(Lista_Datos[22])
-        alto_renglones = (cant_renglones * Lista_Datos[34][1]) + cant_renglones
-        vtn_w.frame_lista.setMinimumSize(QtCore.QSize(ancho, alto_renglones))
-
-        # Ajustamos el ancho de los renglones.
-        # Explcación: Cuando se modifica el tamaño queremos que todas las columnas se mantengan igual, pero redimencionamos la de los conceptos. Debido a que ésta no contiene
-            # un layout distinto para que se comporte de tal modo, lo tengo que redimencionar de manera manual, por ende, recorremos todos los renglones y lo cambiamos.
-            # IMPORTANTE: El ancho actual que las demás columnas ocupan es 460, un valor que se utiliza aquí y también en la clase que crea los renglones. Adaptar ésto a una
-                # función me tomará más tiempo así que por el momento será así, pero el renglón debería incluír la función que redimencione sus renglones, debiendo ser invoca-
-                # da desde fuera, ya que el evento resizeEvent no se ejecuta en el renglón cuándo se redimenciona la ventana, xq justamente sólo se redimenciona la ventana pero
-                # no el renglón.
-        # Además, tenemos que ajustar el frame del título del concepto porque a pesar de que en el QtDesigner es comporta correctamente, en la App no.
-        
-        # Ancho renglon sin el scrollBar 40
-        ancho_ren = vtn_w.frame_panel_lista.width() - 40
-        ancho_con = ancho_ren - 460
-        vtn_w.frame_concepto.setFixedWidth(ancho_con)
-        vtn_w.frame_panel.setFixedWidth(ancho_ren)
-        vtn_w.frame_labels.setFixedWidth(ancho_ren)
-        vtn_w.frame_content_lista.setFixedWidth(ancho_ren)
-        vtn_w.frame_lista.setFixedWidth(ancho_ren)
-
-        if len(V_Ventas.lista_renglones) > 0:
-            for i in V_Ventas.lista_renglones:
-                i[1].setFixedWidth(ancho_con)
-            print("Ancho del CONCEPTO: {}".format(i[1].width()))
 
     '''#############################################################################################################################################
                                                             FUNCIONES GENERALES

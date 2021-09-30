@@ -129,7 +129,7 @@ def Elimina(Direccion, Elimina_Interior_VF = False):
             # True: Cuando la carpeta contiene archivos. False: Carpeta vacía
             if len(Lista_Archivos) > 0:
                 if Elimina_Interior_VF == True:
-                    shutil.rmtree(DIreccion)
+                    shutil.rmtree(Direccion)
                     return 0
                 else:
                     return 2

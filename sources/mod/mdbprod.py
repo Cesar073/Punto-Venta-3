@@ -123,26 +123,37 @@ def conexion_db(sql):
     La búsqueda en las bases de datos será en orden según lo trabajado en la lista que hay en mi_vs, dejando la pos[0] para el final ya que es la local, y armando el path según el string que llegue en el parámetro db.
 
     Intenta conectarse con las bases de datos indicada por parámetro y devuelve 2 valores:
-    1: True/False si pudo o no conectarse.
+    1: valores:
+        -1 = No pudo conectarse a ninguna base de datos
+        0  = Se conectó a la db local
+        1  = Se conectó a la que está en la pos 1 de la lista de path que tenemos en mi_vs.LIST_BASE_DATOS
+        n  = Continúa con la lógica del valor anterior hasta llegar a 4, que es la 5ta posición de path.
     2: Resultado de la consulta.
     En el caso de que no se haya podido conectar con ninguna base de datos, devolverá False y un string vacío.'''
     def wrapper(*args):
         db, query, parameters = sql(*args)
         largo = len(mi_vs.LIST_BASE_DATOS)
         for pos in range(largo):
-            if pos == largo - 1:
+            if parameters == "LOCAL":
                 path = mi_vs.LIST_BASE_DATOS[0] + db
+                aux = 0
             else:
-                path = mi_vs.LIST_BASE_DATOS[pos + 1] + db
+                if pos == largo - 1:
+                    path = mi_vs.LIST_BASE_DATOS[0] + db
+                    aux = 0
+                else:
+                    path = mi_vs.LIST_BASE_DATOS[pos + 1] + db
+                    aux = pos + 1
             try:
                 with sqlite3.connect(path) as conn:
                     Cur = conn.cursor()
                     result = Cur.execute(query, parameters)
                     conn.commit()
-                return True, result
+                return aux, result
             except:
-                pass
-        return False, ""
+                if parameters == "LOCAL":
+                    return -1, ""
+        return -1, ""
     return wrapper
 
 '''#############################################################################################################################################
@@ -295,9 +306,8 @@ def Act_Productos_Segun_Codigo(CodBulto, CantBulto, Concepto, Marca, Detalle, Un
     sql = 'UPDATE Productos SET CodBulto = "{}", CantBulto = "{}", Concepto = "{}", Marca = "{}", Detalle = "{}", UnidadMedida = {} WHERE Codigo = {}' .format(CodBulto, CantBulto, Concepto, Marca, Detalle, UnidadMedida, Codigo_)
     Realiza_consulta(mi_vs.BASE_DATOS_SEC, sql)
 
-# Genera que una actualización que viene preparada en una lista, se pueda hacer dividida en variables para la función que está debajo
-''' 1 '''
 def Act_Stock_Segun_ID_Por_Lista(Lista):
+    '''Genera que una actualización que viene preparada en una lista, se pueda hacer dividida en variables para la función que está debajo.'''
     Cant1 = Lista[1]
     Cant2 = Lista[2]
     Cant3 = Lista[3]
@@ -311,10 +321,11 @@ def Act_Stock_Segun_ID_Por_Lista(Lista):
     PcioVta = Lista[11]
     StockVerificado = Lista[12]
     ID_ = Lista[0]
-    Act_Stock_Segun_ID(Cant1, Cant2, Cant3, Vto1, Vto2, Vto3, PcioCpa1, PcioCpa2, PcioCpa3, CantTotal, PcioVta, StockVerificado, ID_)
-# Actualiza datos de la tabla "Stock" según su ID
+    estado, Datos = Act_Stock_Segun_ID(Cant1, Cant2, Cant3, Vto1, Vto2, Vto3, PcioCpa1, PcioCpa2, PcioCpa3, CantTotal, PcioVta, StockVerificado, ID_)
+    return estado, Datos
 @conexion_db
 def Act_Stock_Segun_ID(Cant1, Cant2, Cant3, Vto1, Vto2, Vto3, PcioCpa1, PcioCpa2, PcioCpa3, CantTotal, PcioVta, StockVerificado, ID_):
+    '''# Actualiza datos de la tabla "Stock" según su ID'''
     sql = 'UPDATE Stock SET Cant1 = {}, Cant2 = {}, Cant3 = {}, Vto1 = {}, Vto2 = {}, Vto3 = {}, PcioCpa1 = {}, PcioCpa2 = {}, PcioCpa3 = {}, CantTotal = {}, PcioVta = {}, StockVerificado = {} WHERE ID = {}'.format(Cant1, Cant2, Cant3, Vto1, Vto2, Vto3, PcioCpa1, PcioCpa2, PcioCpa3, CantTotal, PcioVta, StockVerificado, ID_)
     return "prod.db", sql, ()
 
@@ -339,9 +350,8 @@ def Act_Adicionales_Segun_ID(CajaAsoc, Mayorista, UltFechaVta, Siniestro, Sobran
     sql = 'UPDATE Adicionales SET CajaAsoc = {}, Mayorista = {}, UltFechaVta = {}, Siniestro = {}, Sobrante = {}, SinCobrar = {}, PorcGeneral = {}, Promo = "{}", CantPreaviso = {}, CantMaxima = {}, DiasPreaviso = {} WHERE ID = {}'.format(CajaAsoc, Mayorista, UltFechaVta, Siniestro, Sobrante, SinCobrar, PorcGeneral, Promo, CantPreaviso, CantMaxima, DiasPreaviso, ID_)
     Realiza_consulta(mi_vs.BASE_DATOS_SEC, sql)
 
-# Genera que una actualización que viene preparada en una lista, se pueda hacer dividida en variables para la función que está debajo
-''' 1 '''
 def Act_Estadisticas_Segun_ID_Por_Lista(Lista):
+    '''Genera que una actualización que viene preparada en una lista, se pueda hacer dividida en variables para la función que está debajo.'''
     GciaSemanal = Lista[1]
     GciaMensual = Lista[2]
     GciaAnual = Lista[3]
@@ -352,10 +362,11 @@ def Act_Estadisticas_Segun_ID_Por_Lista(Lista):
     CantVendTotal = Lista[8]
     SiniestrosTotal = Lista[9]
     ID_ = Lista[0]
-    Act_Estadisticas_Segun_ID(GciaSemanal, GciaMensual, GciaAnual, GciaTotal, CantVendSem, CantVendMes, CantVendAnual, CantVendTotal, SiniestrosTotal, ID_)
-# Actualiza datos de la tabla "Estadisticas" según su ID
+    estado, Datos = Act_Estadisticas_Segun_ID(GciaSemanal, GciaMensual, GciaAnual, GciaTotal, CantVendSem, CantVendMes, CantVendAnual, CantVendTotal, SiniestrosTotal, ID_)
+    return estado, Datos
 @conexion_db
 def Act_Estadisticas_Segun_ID(GciaSemanal, GciaMensual, GciaAnual, GciaTotal, CantVendSem, CantVendMes, CantVendAnual, CantVendTotal, SiniestrosTotal, ID_):
+    '''Actualiza datos de la tabla "Estadisticas" según su ID.'''
     sql = 'UPDATE Estadistica SET GciaSemanal = {}, GciaMensual = {}, GciaAnual = {}, GciaTotal = {}, CantVendSem = {}, CantVendMes = {}, CantVendAnual = {}, CantVendTotal = {}, SiniestrosTotal = {} WHERE ID = {}'.format(GciaSemanal, GciaMensual, GciaAnual, GciaTotal, CantVendSem, CantVendMes, CantVendAnual, CantVendTotal, SiniestrosTotal, ID_)
     return "prod.db", sql, ()
 
@@ -418,11 +429,11 @@ def Dev_Info_Producto(Codigo, Todos = False):
     Encontrado = 0
     valor = 0
     Lista_Datos = []
-    Conexion = 0
+    Conexion = 1
 
     # Buscamos el producto según su código
     estado, Reg = Reg_Un_param("prod.db", "Productos", "Codigo", Codigo)
-    if estado == True:
+    if estado > (-1):
         Encontrado, Lista_Datos = Dev_Info_Producto2("prod.db", Reg)
 
         # Si no está según su código, lo buscamos entonces según el código por bulto
@@ -572,6 +583,7 @@ def Act_Valor_Texto(BaseDeDatos, Tabla, Col_Actualiza, Valor_Actualiza, Col_Comp
     # Los pasos para trabajar en la bd, son: Conectarse, realizar la consulta, cargarla en una variable y desconectarse
     # query será el parámetro que traiga el tipo de consuta que se desea, y en caso de haber parámetros, se utilizarán, de lo contrario, la tupla queda vacía
 def Realiza_consulta( BaseDeDatos, query, parameters = ()):
+
     db_nombre = BaseDeDatos
     # Realizamos la conección y la almacenamos en la variable conn
     with sqlite3.connect(db_nombre) as conn:
@@ -585,9 +597,10 @@ def Realiza_consulta( BaseDeDatos, query, parameters = ()):
 '''#############################################################################################################################################
     AYUDAS  '''
 
-# Devuelve la tabla solicitada de la base de datos de clientes
 def Dev_Tabla_Clie(Tabla):
-    return Dev_Tabla(mi_vs.BASE_CLIENTES_PPAL, Tabla)
+    '''Función que devuelve 2 valores, una variable que va desde -1 hasta 4, indicando si hubo o no conexión y en caso de haber, la posición en la lista de path donde se pudo coenctar, y luego la tabla solicitada.'''
+    estado, Tabla = Dev_Tabla("clie.db", Tabla)
+    return estado, Tabla
 
 # Devuelve el total de registros de la tabla solicitada de la base de datos de clientes
 def Dev_Total_Tabla_Clie(Tabla):
@@ -614,20 +627,30 @@ def Dev_Dato_Int(BaseDeDatos, Tabla, ColumnaCompara, DatoCompara, ColumnaDevuelv
         aux = i[0]
     return aux
 
-# DEVUELVE LA TABLA COMPLETA QUE SE HAYA SOLICITADO
-''' 1 '''
-def Dev_Tabla(BaseDeDatos, Tabla, OrdenBy = ""):
+@conexion_db
+def Dev_Tabla(nameDb, Tabla, OrdenBy = ""):
+    '''Función que devuelve 2 valores, una variable que va desde -1 hasta 4, indicando si hubo o no conexión y en caso de haber, la posición en la lista de path donde se pudo coenctar, y luego la tabla que se le ha solicitado.
+    El parámetro "OrdenBy" debe ser llenado con las pal'''
     if OrdenBy == "":
         sql = 'SELECT * FROM {}' .format(Tabla)
     else:
         sql = 'SELECT * FROM {} ORDER BY {}'.format(Tabla, OrdenBy)
-    Resultado = Realiza_consulta(BaseDeDatos, sql)
-    return Resultado
+    return nameDb, sql, ()
 
-# DEVUELVE UN REGISTRO BUSCADO SEGÚN UN DATO EN PARTICULAR
 @conexion_db
 def Reg_Un_param(nameDb, Tabla, Columna, DatoCoincide):
+    '''Función que devuelve 2 valores, una variable que va desde -1 hasta 4, indicando si hubo o no conexión y en caso de haber, la posición en la lista de path donde se pudo coenctar, y luego el registro solicitado.'''
     sql = "SELECT * FROM {} WHERE {} = '{}'" .format( Tabla, Columna, DatoCoincide)
+    return nameDb, sql, ()
+
+@conexion_db
+def Update_State_Value(nameDb, namePc, state, nameUp):
+    '''Actualiza el estado de una base de datos. Le deben llegar 4 parámetros:
+    nameDb = Nombre de la base de datos a la que vamos a actualizar
+    namePc = Nombre de la PC que debe informar que ya ha realizado la actualización
+    state = Estado a escribir en su columna respectiva
+    nameUp = Nombre de la actualización en cuestión.'''
+    sql = "UPDATE Actualizaciones SET {} = {} WHERE db = '{}'" .format( namePc, state, nameUp)
     return nameDb, sql, ()
 
 # Actualiza la tabla "Config", sirve para actualizar todos los totales de "Registros" que hay en cada una de las tablas
@@ -636,4 +659,48 @@ def Act_Reg_Cant(BaseDeDatos, Cantidad, NomTabla):
     parameters = (Cantidad, NomTabla)
     Realiza_consulta(BaseDeDatos, query, parameters)
 
+@conexion_db
+def dateId_AUX(code):
+    '''Devuelve un registro con el valor de ID del código indicado.'''
+    sql = "SELECT ID FROM Productos WHERE Codigo = '{}'".format(code)
+    return "prod.db", sql, "LOCAL"
 
+@conexion_db
+def dateUpdate_AUX(id_):
+    '''Devuelve un registro con el valor de la fecha en que fue actualizado del ID indicado.'''
+    sql = "SELECT Date FROM Update WHERE ID = '{}'".format(id_)
+    return "prod.db", sql, "LOCAL"
+
+def dateUpdate(code):
+    '''Devuelve la fecha y hora de la última actualización realizada.'''
+
+    # Obtenemos el ID del producto en función al código recibido
+    state, reg = dateId_AUX(code)
+    id_ = 0
+    if state == 0:
+        for i in reg:
+            id_ = i[0]
+
+        # Ahora con su ID, conseguimos la fecha de última actualización
+        state, reg = dateUpdate_AUX(id_)
+        if state == 0:
+            for i in reg:
+                date = i[0]
+            return date
+
+@conexion_db
+def Update_Price_Act(nameDb_Act, namePc, state, nameUp):
+    '''Actualiza el estado de una base de datos. Le deben llegar 4 parámetros:
+    nameDb = Nombre de la base de datos a la que vamos a actualizar
+    namePc = Nombre de la PC que debe informar que ya ha realizado la actualización
+    state = Estado a escribir en su columna respectiva
+    nameUp = Nombre de la actualización en cuestión.'''
+    sql = "UPDATE Actualizaciones SET {} = {} WHERE db = '{}'" .format( namePc, state, nameUp)
+    return nameDb, sql, ()
+
+def Dev_Tabla_inicio():
+    '''Esta función ya existía, pero tuve que realizarla ya que el decorador de conexión se basa en una tabla que primero tenemos que rellenar aquí.'''
+    
+    sql = 'SELECT * FROM url ORDER BY ID'
+    Table = Realiza_consulta("./sources/db/path.db", sql, ())
+    return Table
